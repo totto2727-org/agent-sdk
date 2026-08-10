@@ -43,7 +43,7 @@ flowchart TD
   Prompt -. task cancellation .-> Cancel[Provider cleanup then cancellation propagation]
 ```
 
-The common `Prompt` contains text only. A `Continuation` contains the provider session identifier but remains opaque to common consumers. Cancelling the MoonBit task that runs `CliSession::prompt` cooperatively cancels the provider call and propagates the cancellation error after provider cleanup.
+The common `Prompt` contains text only. A `Continuation` is an opaque handle that encapsulates provider-owned resume behavior, including any provider continuation state, without exposing a raw provider identifier. Cancelling the MoonBit task that runs `CliSession::prompt` cooperatively cancels the provider call and propagates the cancellation error after provider cleanup.
 
 Provider-specific sandbox, approval, permission, configuration, events, rich inputs, output metadata, and errors remain in `codex-sdk/cli` or `opencode-sdk/cli`. Adapter constructors accept provider-native option types, and provider errors pass through unchanged, so consumers may import the chosen provider SDK when they need those extensions.
 
