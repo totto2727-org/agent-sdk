@@ -15,38 +15,72 @@ struct FakeSession {
 ///|
 struct FakeCodexSession {
   prompts : Array[String]
+  response : String
+  continued_prompts : Array[String]
+  continued_response : String?
 }
 
 ///|
 impl CliSession for FakeCodexSession with fn continuation(_self) {
-  Some(Continuation::Continuation("codex-session"))
+  match _self.continued_response {
+    Some(response) =>
+      Some(
+        Continuation::Continuation(fn() {
+          let session = FakeCodexSession::{
+            prompts: _self.continued_prompts,
+            response,
+            continued_prompts: [],
+            continued_response: None,
+          }
+          (session : &CliSession)
+        }),
+      )
+    None => None
+  }
 }
 
 ///|
 impl CliSession for FakeCodexSession with fn prompt(self, prompt) {
   self.prompts.push(prompt.text)
   FinalResponse::FinalResponse(
-    "codex response",
-    continuation=Continuation::Continuation("codex-session"),
+    self.response,
+    continuation?=CliSession::continuation(self),
   )
 }
 
 ///|
 struct FakeOpenCodeSession {
   prompts : Array[String]
+  response : String
+  continued_prompts : Array[String]
+  continued_response : String?
 }
 
 ///|
 impl CliSession for FakeOpenCodeSession with fn continuation(_self) {
-  Some(Continuation::Continuation("opencode-session"))
+  match _self.continued_response {
+    Some(response) =>
+      Some(
+        Continuation::Continuation(fn() {
+          let session = FakeOpenCodeSession::{
+            prompts: _self.continued_prompts,
+            response,
+            continued_prompts: [],
+            continued_response: None,
+          }
+          (session : &CliSession)
+        }),
+      )
+    None => None
+  }
 }
 
 ///|
 impl CliSession for FakeOpenCodeSession with fn prompt(self, prompt) {
   self.prompts.push(prompt.text)
   FinalResponse::FinalResponse(
-    "opencode response",
-    continuation=Continuation::Continuation("opencode-session"),
+    self.response,
+    continuation?=CliSession::continuation(self),
   )
 }
 
@@ -73,39 +107,6 @@ impl CliSession for FakeSession with fn prompt(self, prompt) {
 }
 
 ///|
-fn fake_cli(
-  label : String,
-  starts : Array[FakeSession],
-  resumes : Array[Continuation],
-) -> Cli {
-  Cli::Cli(
-    fn() {
-      let session = FakeSession::{
-        continuation_value: Some(Continuation::Continuation("\{label}-session")),
-        response: "\{label} response",
-        prompts: [],
-        fail: false,
-        block: false,
-      }
-      starts.push(session)
-      (session : &CliSession)
-    },
-    fn(continuation) {
-      resumes.push(continuation)
-      let session = FakeSession::{
-        continuation_value: Some(Continuation::Continuation("\{label}-next")),
-        response: "\{label} continued",
-        prompts: [],
-        fail: false,
-        block: false,
-      }
-      starts.push(session)
-      (session : &CliSession)
-    },
-  )
-}
-
-///|
 async fn run_consumer(cli : Cli, text : String) -> FinalResponse {
   cli.start().prompt(Prompt::Prompt(text))
 }
@@ -113,52 +114,66 @@ async fn run_consumer(cli : Cli, text : String) -> FinalResponse {
 ///|
 async test "consumer swaps providers without changing the prompt flow" {
   let codex_prompts : Array[String] = []
-  let codex = Cli::Cli(
-    fn() {
-      let session = FakeCodexSession::{ prompts: codex_prompts }
-      (session : &CliSession)
-    },
-    fn(_) { abort("resume is not used") },
-  )
+  let codex_continued_prompts : Array[String] = []
+  let codex = Cli::Cli(fn() {
+    let session = FakeCodexSession::{
+      prompts: codex_prompts,
+      response: "codex response",
+      continued_prompts: codex_continued_prompts,
+      continued_response: Some("codex continued"),
+    }
+    (session : &CliSession)
+  })
   let opencode_prompts : Array[String] = []
-  let opencode = Cli::Cli(
-    fn() {
-      let session = FakeOpenCodeSession::{ prompts: opencode_prompts }
-      (session : &CliSession)
-    },
-    fn(_) { abort("resume is not used") },
-  )
+  let opencode_continued_prompts : Array[String] = []
+  let opencode = Cli::Cli(fn() {
+    let session = FakeOpenCodeSession::{
+      prompts: opencode_prompts,
+      response: "opencode response",
+      continued_prompts: opencode_continued_prompts,
+      continued_response: Some("opencode continued"),
+    }
+    (session : &CliSession)
+  })
   let codex_response = run_consumer(codex, "same prompt")
   let opencode_response = run_consumer(opencode, "same prompt")
   assert_eq(codex_prompts, ["same prompt"])
   assert_eq(opencode_prompts, ["same prompt"])
   inspect(codex_response.text, content="codex response")
   inspect(opencode_response.text, content="opencode response")
-  assert_eq(
-    codex_response.continuation,
-    Some(Continuation::Continuation("codex-session")),
-  )
-  assert_eq(
-    opencode_response.continuation,
-    Some(Continuation::Continuation("opencode-session")),
-  )
+  let codex_continued = codex
+    .continue_session(codex_response.continuation.unwrap())
+    .prompt(Prompt::Prompt("codex next"))
+  let opencode_continued = opencode
+    .continue_session(opencode_response.continuation.unwrap())
+    .prompt(Prompt::Prompt("opencode next"))
+  inspect(codex_continued.text, content="codex continued")
+  inspect(opencode_continued.text, content="opencode continued")
+  assert_eq(codex_continued_prompts, ["codex next"])
+  assert_eq(opencode_continued_prompts, ["opencode next"])
 }
 
 ///|
 async test "resume passes the opaque continuation unchanged" {
-  let sessions : Array[FakeSession] = []
-  let resumes : Array[Continuation] = []
-  let cli = fake_cli("codex", sessions, resumes)
-  let continuation = Continuation::Continuation("continuation-a")
+  let resumed : Array[String] = []
+  let resumed_session = FakeSession::{
+    continuation_value: None,
+    response: "continued",
+    prompts: [],
+    fail: false,
+    block: false,
+  }
+  let continuation = Continuation::Continuation(fn() {
+    resumed.push("continuation-a")
+    (resumed_session : &CliSession)
+  })
+  let cli = Cli::Cli(fn() { abort("start is not used") })
   let response = cli
     .continue_session(continuation)
     .prompt(Prompt::Prompt("continue"))
-  assert_eq(resumes, [Continuation::Continuation("continuation-a")])
-  inspect(response.text, content="codex continued")
-  assert_eq(
-    response.continuation,
-    Some(Continuation::Continuation("codex-next")),
-  )
+  assert_eq(resumed, ["continuation-a"])
+  inspect(response.text, content="continued")
+  assert_true(response.continuation is None)
 }
 
 ///|

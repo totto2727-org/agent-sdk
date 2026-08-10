@@ -1,13 +1,24 @@
 ///|
 /// Provider adapter session backed by a Codex SDK thread.
 priv struct CodexCliSession {
+  client : @sdk.Codex
   thread : @sdk.Thread
+  thread_options : @sdk.ThreadOptions
   turn_options : @sdk.TurnOptions
 }
 
 ///|
 impl @cli.CliSession for CodexCliSession with fn continuation(self) {
-  self.thread.id().map(fn(value) { @cli.Continuation::Continuation(value) })
+  self.thread.id().map(fn(continuation_id) {
+    @cli.Continuation::Continuation(fn() {
+      codex_session(
+        self.client,
+        self.thread_options,
+        self.turn_options,
+        Some(continuation_id),
+      )
+    })
+  })
 }
 
 ///|
@@ -16,10 +27,31 @@ impl @cli.CliSession for CodexCliSession with fn prompt(self, prompt) {
     @sdk.Prompt(prompt.text),
     turn_options=self.turn_options,
   )
+  let continuation = @cli.CliSession::continuation(self)
   @cli.FinalResponse::FinalResponse(
     turn.final_response,
-    continuation?=@cli.CliSession::continuation(self),
+    continuation?=continuation,
   )
+}
+
+///|
+fn codex_session(
+  client : @sdk.Codex,
+  thread_options : @sdk.ThreadOptions,
+  turn_options : @sdk.TurnOptions,
+  continuation_id : String?,
+) -> &@cli.CliSession {
+  let thread = match continuation_id {
+    Some(id) => client.resume_thread(id, options=thread_options)
+    None => client.start_thread(options=thread_options)
+  }
+  let session = CodexCliSession::{
+    client,
+    thread,
+    thread_options,
+    turn_options,
+  }
+  (session : &@cli.CliSession)
 }
 
 ///|
@@ -31,23 +63,7 @@ pub fn codex_cli(
   turn_options? : @sdk.TurnOptions = @sdk.TurnOptions::TurnOptions(),
 ) -> @cli.Cli {
   let client = @sdk.Codex::Codex(options~)
-  @cli.Cli::Cli(
-    fn() {
-      let session = CodexCliSession::{
-        thread: client.start_thread(options=thread_options),
-        turn_options,
-      }
-      (session : &@cli.CliSession)
-    },
-    fn(continuation) {
-      let session = CodexCliSession::{
-        thread: client.resume_thread(
-          continuation.value,
-          options=thread_options,
-        ),
-        turn_options,
-      }
-      (session : &@cli.CliSession)
-    },
-  )
+  @cli.Cli::Cli(fn() {
+    codex_session(client, thread_options, turn_options, None)
+  })
 }

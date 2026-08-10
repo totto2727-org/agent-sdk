@@ -13,13 +13,15 @@ pub fn Prompt::Prompt(text : String) -> Prompt {
 ///|
 /// Opaque provider continuation identifier.
 pub struct Continuation {
-  value : String
-} derive(Debug, Eq)
+  priv resume_session : () -> &CliSession
+}
 
 ///|
-/// Creates a continuation from a provider session identifier.
-pub fn Continuation::Continuation(value : String) -> Continuation {
-  { value, }
+/// Creates an opaque continuation handle from provider-owned resume behavior.
+pub fn Continuation::Continuation(
+  resume_session : () -> &CliSession,
+) -> Continuation {
+  { resume_session, }
 }
 
 ///|
@@ -27,7 +29,7 @@ pub fn Continuation::Continuation(value : String) -> Continuation {
 pub struct FinalResponse {
   text : String
   continuation : Continuation?
-} derive(Debug, Eq)
+}
 
 ///|
 /// Creates a final response.
@@ -52,16 +54,12 @@ pub(open) trait CliSession {
 /// Provider-neutral entry point for starting or resuming CLI sessions.
 pub struct Cli {
   priv start_session : () -> &CliSession
-  priv resume_session : (Continuation) -> &CliSession
 }
 
 ///|
 /// Creates a CLI adapter from provider-specific session factories.
-pub fn Cli::Cli(
-  start : () -> &CliSession,
-  resume_session : (Continuation) -> &CliSession,
-) -> Cli {
-  { start_session: start, resume_session }
+pub fn Cli::Cli(start : () -> &CliSession) -> Cli {
+  { start_session: start }
 }
 
 ///|
@@ -73,8 +71,8 @@ pub fn Cli::start(self : Cli) -> &CliSession {
 ///|
 /// Resumes the provider session represented by an opaque continuation.
 pub fn Cli::continue_session(
-  self : Cli,
+  _self : Cli,
   continuation : Continuation,
 ) -> &CliSession {
-  (self.resume_session)(continuation)
+  (continuation.resume_session)()
 }
