@@ -19,7 +19,7 @@ description = "Provider-neutral MoonBit interfaces for agent CLI SDKs"
 // wasm, js, native. If a dependency supports fewer targets, narrow both
 // settings to match that dependency.
 //
-supported_targets = "native"
+supported_targets = "+wasm+native"
 // preferred_target = "wasm"
 // preferred_target = "js"
 preferred_target = "native"

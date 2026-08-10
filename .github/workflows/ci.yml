@@ -10,16 +10,37 @@ permissions:
 
 jobs:
   check:
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [native, wasm]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: totto2727-org/monorepo/.github/actions/setup-nix@main
-      - name: Verify MoonBit module
+      - name: Prepare exact SDK workspace
         run: |
           eval "$(nix print-dev-env "$GITHUB_WORKSPACE#default")"
-          moon update
-          moon info
-          moon check
-          moon test
-          moon package --list
+          workspace="$RUNNER_TEMP/agent-sdk-workspace"
+          mkdir -p "$workspace"
+          git clone --quiet https://github.com/totto2727-org/agent-core-sdk.git "$workspace/agent-core-sdk"
+          git -C "$workspace/agent-core-sdk" checkout --quiet 127a11e9c4b0bf0067e3082a55af0a44e69c5fe0
+          git clone --quiet https://github.com/totto2727-org/codex-sdk.git "$workspace/codex-sdk"
+          git -C "$workspace/codex-sdk" checkout --quiet 006c4a47f5808a71337e393f1c41e7889a111d49
+          git clone --quiet https://github.com/totto2727-org/opencode-sdk.git "$workspace/opencode-sdk"
+          git -C "$workspace/opencode-sdk" checkout --quiet 03660eca982c7867155ff17dff0aced279a22902
+          git clone --quiet "$GITHUB_WORKSPACE" "$workspace/agent-sdk"
+          printf 'members = ["./agent-core-sdk", "./codex-sdk", "./opencode-sdk", "./agent-sdk"]\n' > "$workspace/moon.work"
+          echo "MOON_WORKSPACE=$workspace" >> "$GITHUB_ENV"
+      - name: Verify MoonBit module (${{ matrix.target }})
+        env:
+          MOON_TARGET: ${{ matrix.target }}
+        run: |
+          eval "$(nix print-dev-env "$GITHUB_WORKSPACE#default")"
+          moon -C "$MOON_WORKSPACE" update
+          moon -C "$MOON_WORKSPACE" info
+          moon -C "$MOON_WORKSPACE" check --target "$MOON_TARGET" --deny-warn agent-sdk/src/cli agent-sdk/src/cli/codex agent-sdk/src/cli/opencode
+          moon -C "$MOON_WORKSPACE" test --target "$MOON_TARGET" --deny-warn --jobs 1 --no-parallelize agent-sdk/src/cli agent-sdk/src/cli/codex agent-sdk/src/cli/opencode
+          moon -C "$MOON_WORKSPACE" build --target "$MOON_TARGET" --deny-warn agent-sdk/src/cli agent-sdk/src/cli/codex agent-sdk/src/cli/opencode
+          moon -C "$MOON_WORKSPACE/agent-sdk" package --list

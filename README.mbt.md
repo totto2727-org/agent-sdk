@@ -28,6 +28,19 @@ flowchart LR
 
 `agent-sdk/cli` imports neither provider nor `agent-core-sdk`. Each adapter imports only the common package and its matching provider SDK. `agent-sdk` therefore has no direct dependency on `agent-core-sdk` and no provider-to-provider dependency.
 
+## Target matrix
+
+The module, common `src/cli` package, and both provider adapter packages declare `+wasm+native` support with `native` as the preferred target. Every supported target uses the same source files and package layout.
+
+| Surface | Native | Wasm |
+| --- | --- | --- |
+| `src/cli` common contract | Check, test, and build | Check, test, and build |
+| `src/cli/codex` adapter | Check, test, and build | Check, test, and build |
+| `src/cli/opencode` adapter | Check, test, and build | Check, test, and build |
+| `src/server` | Reserved by `.gitkeep` only | Reserved by `.gitkeep` only |
+
+The adapters keep provider process behavior behind `codex-sdk/cli` and `opencode-sdk/cli`; `agent-sdk` does not add target-specific source directories, packages, backends, or shims. Native remains preferred because the provider SDKs ultimately connect to installed CLI processes. A Wasm host must supply the process bridge required by those provider SDKs.
+
 ## Processing flow
 
 ```mermaid
@@ -75,17 +88,22 @@ let opencode = @opencode_adapter.opencode_cli(
 
 ## Development
 
-The module retains the template's `source = "./src"` layout and currently follows the native target supported by both provider CLI packages. Dependencies are declared according to MoonBit's official [module configuration](https://docs.moonbitlang.com/en/latest/toolchain/moon/module.html) and [package configuration](https://docs.moonbitlang.com/en/latest/toolchain/moon/package.html).
+The module retains the template's `source = "./src"` layout. Dependencies and target support are declared according to MoonBit's official [module configuration](https://docs.moonbitlang.com/en/latest/toolchain/moon/module.html) and [package configuration](https://docs.moonbitlang.com/en/latest/toolchain/moon/package.html).
 
-Run the standard module checks from the repository root once the provider SDK versions are available in the registry:
+Run the standard module checks for each supported target once the provider SDK versions are available in the registry:
 
 ```bash
 moon update
 moon info
 moon check --target native
-moon test --target native
+moon test --target native --jobs 1 --no-parallelize
 moon build --target native
+moon package --list
+
+moon check --target wasm
+moon test --target wasm --jobs 1 --no-parallelize
+moon build --target wasm
 moon package --list
 ```
 
-Before publication, validate with a `moon.work` overlay pinned to `codex-sdk` 0.2.0 commit `31daf98bae76af6d6e55589413fdaf03674e65c1` and `opencode-sdk` 0.3.0 commit `c86e8946c1e02b977ea0ae17e305b76aab6d7140`.
+Before publication, CI validates through a temporary `moon.work` overlay pinned to `agent-core-sdk` commit `127a11e9c4b0bf0067e3082a55af0a44e69c5fe0`, `codex-sdk` commit `006c4a47f5808a71337e393f1c41e7889a111d49`, and `opencode-sdk` commit `03660eca982c7867155ff17dff0aced279a22902`. No dependency override or workspace file is committed.
