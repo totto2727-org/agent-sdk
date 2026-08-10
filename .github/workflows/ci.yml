@@ -27,7 +27,7 @@ jobs:
           git clone --quiet https://github.com/totto2727-org/agent-core-sdk.git "$workspace/agent-core-sdk"
           git -C "$workspace/agent-core-sdk" checkout --quiet 127a11e9c4b0bf0067e3082a55af0a44e69c5fe0
           git clone --quiet https://github.com/totto2727-org/codex-sdk.git "$workspace/codex-sdk"
-          git -C "$workspace/codex-sdk" checkout --quiet 006c4a47f5808a71337e393f1c41e7889a111d49
+          git -C "$workspace/codex-sdk" checkout --quiet 15577d304a2b5888d4032de406176254754ccb57
           git clone --quiet https://github.com/totto2727-org/opencode-sdk.git "$workspace/opencode-sdk"
           git -C "$workspace/opencode-sdk" checkout --quiet 03660eca982c7867155ff17dff0aced279a22902
           git clone --quiet "$GITHUB_WORKSPACE" "$workspace/agent-sdk"

@@ -106,4 +106,4 @@ moon build --target wasm
 moon package --list
 ```
 
-Before publication, CI validates through a temporary `moon.work` overlay pinned to `agent-core-sdk` commit `127a11e9c4b0bf0067e3082a55af0a44e69c5fe0`, `codex-sdk` commit `006c4a47f5808a71337e393f1c41e7889a111d49`, and `opencode-sdk` commit `03660eca982c7867155ff17dff0aced279a22902`. No dependency override or workspace file is committed.
+Before publication, CI validates through a temporary `moon.work` overlay pinned to `agent-core-sdk` commit `127a11e9c4b0bf0067e3082a55af0a44e69c5fe0`, `codex-sdk` commit `15577d304a2b5888d4032de406176254754ccb57`, and `opencode-sdk` commit `03660eca982c7867155ff17dff0aced279a22902`. No dependency override or workspace file is committed.
