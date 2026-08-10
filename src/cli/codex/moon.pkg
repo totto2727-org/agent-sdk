@@ -8,5 +8,7 @@ import {
 import {
   "moonbitlang/async",
   "moonbitlang/async/fs",
+  "moonbitlang/async/process",
+  "moonbitlang/core/string",
   "moonbitlang/x/path",
 } for "test"

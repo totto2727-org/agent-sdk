@@ -88,4 +88,4 @@ moon build --target native
 moon package --list
 ```
 
-Before publication, validate with a `moon.work` overlay pinned to `codex-sdk` 0.2.0 commit `d38b46958f45cdc674c860239daa38ea701e389b` and `opencode-sdk` 0.3.0 commit `eeed825b5e02f6457f17089c605ec578296e0d41`.
+Before publication, validate with a `moon.work` overlay pinned to `codex-sdk` 0.2.0 commit `31daf98bae76af6d6e55589413fdaf03674e65c1` and `opencode-sdk` 0.3.0 commit `c86e8946c1e02b977ea0ae17e305b76aab6d7140`.

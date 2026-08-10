@@ -58,6 +58,21 @@ async fn FakeCodex::record(self : FakeCodex, name : String, call : Int) -> Strin
 }
 
 ///|
+async fn wait_for_codex_file(path : String) -> Unit {
+  @async.with_timeout(2000, async fn() {
+    while !@fs.exists(path) {
+      @async.pause()
+    }
+  })
+}
+
+///|
+async fn codex_process_is_running(pid : Int) -> Bool {
+  let (code, _, _) = @process.collect_output("kill", ["-0", pid.to_string()])
+  code == 0
+}
+
+///|
 fn codex_events(id : String, text : String) -> String {
   [
     "{\"type\":\"thread.started\",\"thread_id\":\"\{id}\"}",
@@ -79,7 +94,13 @@ fn fake_codex_script() -> String {
   #|printf '%s' "$call" > "$counter"
   #|printf '%s\n' "$@" > "$record_dir/args.$call"
   #|/bin/cat > "$record_dir/input.$call"
-  #|eval "events=\${FAKE_CODEX_EVENTS_$call-}"
+  #|printf '%s\n' "$$" > "$record_dir/pid.$call"
+  #|case "$call" in
+  #|  1) events="${FAKE_CODEX_EVENTS_1-}" ;;
+  #|  2) events="${FAKE_CODEX_EVENTS_2-}" ;;
+  #|  3) events="${FAKE_CODEX_EVENTS_3-}" ;;
+  #|  *) events="${FAKE_CODEX_EVENTS-}" ;;
+  #|esac
   #|if [ -n "$events" ]; then printf '%s\n' "$events"; fi
   #|if [ "${FAKE_CODEX_PAUSE-}" = "1" ]; then /bin/sleep 30; fi
   #|exit "${FAKE_CODEX_EXIT_CODE-0}"
@@ -130,6 +151,13 @@ async test "Codex adapter maps prompt, continuation, errors, and cancellation" {
         },
         allow_failure=true,
       )
+      let pid_path = "\{fixture.records}/pid.1"
+      wait_for_codex_file(pid_path)
+      let pid = @string.parse_int(
+        @fs.read_file(pid_path).text().trim(),
+        base=10,
+      )
+      assert_true(codex_process_is_running(pid))
       task.cancel()
       let cancelled = try {
         task.wait()
@@ -138,6 +166,7 @@ async test "Codex adapter maps prompt, continuation, errors, and cancellation" {
         error => @async.is_cancellation_error(error)
       }
       assert_true(cancelled)
+      assert_false(codex_process_is_running(pid))
     })
   })
 }
