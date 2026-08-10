@@ -13,6 +13,44 @@ struct FakeSession {
 }
 
 ///|
+struct FakeCodexSession {
+  prompts : Array[String]
+}
+
+///|
+impl CliSession for FakeCodexSession with fn continuation(_self) {
+  Some(Continuation::Continuation("codex-session"))
+}
+
+///|
+impl CliSession for FakeCodexSession with fn prompt(self, prompt) {
+  self.prompts.push(prompt.text)
+  FinalResponse::FinalResponse(
+    "codex response",
+    continuation=Continuation::Continuation("codex-session"),
+  )
+}
+
+///|
+struct FakeOpenCodeSession {
+  prompts : Array[String]
+}
+
+///|
+impl CliSession for FakeOpenCodeSession with fn continuation(_self) {
+  Some(Continuation::Continuation("opencode-session"))
+}
+
+///|
+impl CliSession for FakeOpenCodeSession with fn prompt(self, prompt) {
+  self.prompts.push(prompt.text)
+  FinalResponse::FinalResponse(
+    "opencode response",
+    continuation=Continuation::Continuation("opencode-session"),
+  )
+}
+
+///|
 impl CliSession for FakeSession with fn continuation(self) {
   self.continuation_value
 }
@@ -68,20 +106,42 @@ fn fake_cli(
 }
 
 ///|
+async fn run_consumer(cli : Cli, text : String) -> FinalResponse {
+  cli.start().prompt(Prompt::Prompt(text))
+}
+
+///|
 async test "consumer swaps providers without changing the prompt flow" {
-  let prompt = Prompt::Prompt("same prompt")
-  for label in ["codex", "opencode"] {
-    let sessions : Array[FakeSession] = []
-    let cli = fake_cli(label, sessions, [])
-    let session = cli.start()
-    let response = session.prompt(prompt)
-    assert_eq(sessions[0].prompts, ["same prompt"])
-    inspect(response.text, content="\{label} response")
-    assert_eq(
-      response.continuation,
-      Some(Continuation::Continuation("\{label}-session")),
-    )
-  }
+  let codex_prompts : Array[String] = []
+  let codex = Cli::Cli(
+    fn() {
+      let session = FakeCodexSession::{ prompts: codex_prompts }
+      (session : &CliSession)
+    },
+    fn(_) { abort("resume is not used") },
+  )
+  let opencode_prompts : Array[String] = []
+  let opencode = Cli::Cli(
+    fn() {
+      let session = FakeOpenCodeSession::{ prompts: opencode_prompts }
+      (session : &CliSession)
+    },
+    fn(_) { abort("resume is not used") },
+  )
+  let codex_response = run_consumer(codex, "same prompt")
+  let opencode_response = run_consumer(opencode, "same prompt")
+  assert_eq(codex_prompts, ["same prompt"])
+  assert_eq(opencode_prompts, ["same prompt"])
+  inspect(codex_response.text, content="codex response")
+  inspect(opencode_response.text, content="opencode response")
+  assert_eq(
+    codex_response.continuation,
+    Some(Continuation::Continuation("codex-session")),
+  )
+  assert_eq(
+    opencode_response.continuation,
+    Some(Continuation::Continuation("opencode-session")),
+  )
 }
 
 ///|
