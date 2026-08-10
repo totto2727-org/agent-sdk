@@ -120,16 +120,40 @@ async test "OpenCode adapter maps prompt, continuation, errors, and cancellation
         opencode_events("session-1", "second"),
       ]),
     )
-    let first = cli.start().prompt(@cli.Prompt::Prompt("hello"))
+    let session = cli.start()
+    assert_eq(session.id(), None)
+    let first = session.prompt(
+      @cli.Prompt::Prompt(
+        "hello",
+        context_files=[@path.Path("docs/a.md"), @path.Path("src/b.mbt")],
+      ),
+    )
     inspect(first.text, content="first")
+    assert_eq(first.session_id, Some("session-1"))
+    assert_eq(first.changed_files, [])
     assert_true(first.continuation is Some(_))
     let second = cli
       .continue_session(first.continuation.unwrap())
       .prompt(@cli.Prompt::Prompt("continue"))
     inspect(second.text, content="second")
     inspect(fixture.record("input", 1), content="hello")
+    assert_true(fixture.record("args", 1).contains("--file\ndocs/a.md"))
+    assert_true(fixture.record("args", 1).contains("--file\nsrc/b.mbt"))
     inspect(fixture.record("input", 2), content="continue")
     assert_true(fixture.record("args", 2).contains("--session\nsession-1"))
+  })
+  with_fake_opencode(async fn(fixture) {
+    let cli = opencode_cli(
+      options=fixture.options([opencode_events("session-existing", "resumed")]),
+      resume_thread_id="session-existing",
+    )
+    let session = cli.start()
+    assert_eq(session.id(), Some("session-existing"))
+    let response = session.prompt(@cli.Prompt::Prompt("resume now"))
+    assert_eq(response.session_id, Some("session-existing"))
+    assert_true(
+      fixture.record("args", 1).contains("--session\nsession-existing"),
+    )
   })
   with_fake_opencode(async fn(fixture) {
     let cli = opencode_cli(options=fixture.options([], exit_code=7))

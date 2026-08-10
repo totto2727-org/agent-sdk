@@ -3,6 +3,7 @@ supported_targets = "native"
 import {
   "totto2727/agent-sdk/cli" @cli,
   "totto2727/codex-sdk/cli" @sdk,
+  "moonbitlang/x/path" @path,
 }
 
 import {

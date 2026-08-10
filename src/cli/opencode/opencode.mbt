@@ -7,6 +7,11 @@ priv struct OpenCodeCliSession {
 }
 
 ///|
+impl @cli.CliSession for OpenCodeCliSession with fn id(self) {
+  self.thread.id()
+}
+
+///|
 impl @cli.CliSession for OpenCodeCliSession with fn continuation(self) {
   self.thread.id().map(fn(continuation_id) {
     @cli.Continuation::Continuation(fn() {
@@ -21,12 +26,26 @@ impl @cli.CliSession for OpenCodeCliSession with fn continuation(self) {
 
 ///|
 impl @cli.CliSession for OpenCodeCliSession with fn prompt(self, prompt) {
-  let turn = self.thread.run(@sdk.Prompt(prompt.text))
+  let turn = self.thread.run(opencode_input(prompt))
   let continuation = @cli.CliSession::continuation(self)
   @cli.FinalResponse::FinalResponse(
     turn.final_response,
+    session_id?=self.thread.id(),
+    changed_files=[],
     continuation?=continuation,
   )
+}
+
+///|
+fn opencode_input(prompt : @cli.Prompt) -> @sdk.Input {
+  if prompt.context_files.is_empty() {
+    return @sdk.Prompt(prompt.text)
+  }
+  let inputs : Array[@sdk.UserInput] = [@sdk.Text(prompt.text)]
+  for path in prompt.context_files {
+    inputs.push(@sdk.LocalFile(path))
+  }
+  @sdk.UserInputs(inputs)
 }
 
 ///|
@@ -49,7 +68,10 @@ fn opencode_session(
 pub fn opencode_cli(
   options? : @sdk.OpenCodeOptions = @sdk.OpenCodeOptions::OpenCodeOptions(),
   thread_options? : @sdk.ThreadOptions = @sdk.ThreadOptions::ThreadOptions(),
+  resume_thread_id? : String,
 ) -> @cli.Cli {
   let client = @sdk.OpenCode::OpenCode(options~)
-  @cli.Cli::Cli(fn() { opencode_session(client, thread_options, None) })
+  @cli.Cli::Cli(fn() {
+    opencode_session(client, thread_options, resume_thread_id)
+  })
 }

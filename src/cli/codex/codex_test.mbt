@@ -73,11 +73,22 @@ async fn codex_process_is_running(pid : Int) -> Bool {
 }
 
 ///|
-fn codex_events(id : String, text : String) -> String {
+fn codex_events(
+  id : String,
+  text : String,
+  changed_path? : String,
+) -> String {
+  let patch = match changed_path {
+    Some(path) => [
+      "{\"type\":\"item.completed\",\"item\":{\"id\":\"patch-1\",\"type\":\"file_change\",\"changes\":[{\"path\":\"\{path}\",\"kind\":\"update\"}],\"status\":\"completed\"}}",
+    ]
+    None => []
+  }
   [
     "{\"type\":\"thread.started\",\"thread_id\":\"\{id}\"}",
     "{\"type\":\"turn.started\"}",
     "{\"type\":\"item.completed\",\"item\":{\"id\":\"item-1\",\"type\":\"agent_message\",\"text\":\"\{text}\"}}",
+    ..patch,
     "{\"type\":\"turn.completed\",\"usage\":{\"input_tokens\":1,\"cached_input_tokens\":0,\"cache_write_input_tokens\":0,\"output_tokens\":1,\"reasoning_output_tokens\":0}}",
   ].join("\n")
 }
@@ -113,20 +124,46 @@ async test "Codex adapter maps prompt, continuation, errors, and cancellation" {
   with_fake_codex(async fn(fixture) {
     let cli = codex_cli(
       options=fixture.options([
-        codex_events("thread-1", "first"),
+        codex_events("thread-1", "first", changed_path="src/changed.mbt"),
         codex_events("thread-1", "second"),
       ]),
     )
-    let first = cli.start().prompt(@cli.Prompt::Prompt("hello"))
+    let session = cli.start()
+    assert_eq(session.id(), None)
+    let first = session.prompt(
+      @cli.Prompt::Prompt(
+        "hello",
+        context_files=[@path.Path("docs/a.md"), @path.Path("src/b.mbt")],
+      ),
+    )
     inspect(first.text, content="first")
+    assert_eq(first.session_id, Some("thread-1"))
+    assert_eq(
+      first.changed_files.map(fn(path) { path.to_string() }),
+      ["src/changed.mbt"],
+    )
     assert_true(first.continuation is Some(_))
     let second = cli
       .continue_session(first.continuation.unwrap())
       .prompt(@cli.Prompt::Prompt("continue"))
     inspect(second.text, content="second")
-    inspect(fixture.record("input", 1), content="hello")
+    inspect(
+      fixture.record("input", 1),
+      content="hello\n\nContext files supplied by the caller:\ndocs/a.md\nsrc/b.mbt",
+    )
     inspect(fixture.record("input", 2), content="continue")
     assert_true(fixture.record("args", 2).contains("resume\nthread-1"))
+  })
+  with_fake_codex(async fn(fixture) {
+    let cli = codex_cli(
+      options=fixture.options([codex_events("thread-existing", "resumed")]),
+      resume_thread_id="thread-existing",
+    )
+    let session = cli.start()
+    assert_eq(session.id(), Some("thread-existing"))
+    let response = session.prompt(@cli.Prompt::Prompt("resume now"))
+    assert_eq(response.session_id, Some("thread-existing"))
+    assert_true(fixture.record("args", 1).contains("resume\nthread-existing"))
   })
   with_fake_codex(async fn(fixture) {
     let cli = codex_cli(options=fixture.options([], exit_code=7))
