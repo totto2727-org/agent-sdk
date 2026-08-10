@@ -6,7 +6,7 @@ Provider-neutral MoonBit interfaces for running Codex and OpenCode CLI sessions 
 
 | Package | Responsibility |
 | --- | --- |
-| `totto2727/agent-sdk/cli` | Common text prompt, opaque continuation, final response, and cancellable session contract |
+| `totto2727/agent-sdk/cli` | Common text/context prompt, session identifier, opaque continuation, final response, changed-file list, and cancellable session contract |
 | `totto2727/agent-sdk/cli/codex` | Codex adapter configured with native `CodexOptions`, `ThreadOptions`, and `TurnOptions` |
 | `totto2727/agent-sdk/cli/opencode` | OpenCode adapter configured with native `OpenCodeOptions` and `ThreadOptions` |
 
@@ -56,7 +56,9 @@ flowchart TD
   Prompt -. task cancellation .-> Cancel[Provider cleanup then cancellation propagation]
 ```
 
-The common `Prompt` contains text only. A `Continuation` is an opaque handle that encapsulates provider-owned resume behavior, including any provider continuation state, without exposing a raw provider identifier. Cancelling the MoonBit task that runs `CliSession::prompt` cooperatively cancels the provider call and propagates the cancellation error after provider cleanup.
+The common `Prompt` contains provider-neutral text and an optional caller-ordered list of context files. `CliSession::id` and `FinalResponse::session_id` expose the provider thread or session identifier when available. A `Continuation` remains an opaque handle that encapsulates provider-owned resume behavior. `FinalResponse::changed_files` contains completed Codex patch paths and is empty for OpenCode because its current event model does not expose a reliable change set. Cancelling the MoonBit task that runs `CliSession::prompt` cooperatively cancels the provider call and propagates the cancellation error after provider cleanup.
+
+Codex preserves the existing Workgraph prompt behavior by appending the supplied context path list to the prompt text. OpenCode maps the same list to ordered `Text` and `LocalFile` inputs; callers remain responsible for resolving relative paths against their workspace before constructing the common prompt.
 
 Provider-specific sandbox, approval, permission, configuration, events, rich inputs, output metadata, and errors remain in `codex-sdk/cli` or `opencode-sdk/cli`. Adapter constructors accept provider-native option types, and provider errors pass through unchanged, so consumers may import the chosen provider SDK when they need those extensions.
 
@@ -77,14 +79,18 @@ let codex = @codex_adapter.codex_cli(
   options=@codex.CodexOptions::CodexOptions(),
   thread_options=@codex.ThreadOptions::ThreadOptions(),
   turn_options=@codex.TurnOptions::TurnOptions(),
+  resume_thread_id?=None,
 )
 
 ///|
 let opencode = @opencode_adapter.opencode_cli(
   options=@opencode.OpenCodeOptions::OpenCodeOptions(),
   thread_options=@opencode.ThreadOptions::ThreadOptions(),
+  resume_thread_id?=None,
 )
 ```
+
+Both adapter constructors retain their provider-native option types and accept an optional initial resume identifier. Existing text-only `Prompt::Prompt(text)` callers and opaque continuation flows remain valid.
 
 ## Development
 

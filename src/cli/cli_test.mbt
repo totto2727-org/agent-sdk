@@ -5,6 +5,7 @@ suberror FakeProviderError {
 
 ///|
 struct FakeSession {
+  id_value : String?
   continuation_value : Continuation?
   response : String
   prompts : Array[String]
@@ -14,6 +15,7 @@ struct FakeSession {
 
 ///|
 struct FakeCodexSession {
+  id_value : String?
   prompts : Array[String]
   response : String
   continued_prompts : Array[String]
@@ -27,6 +29,7 @@ impl CliSession for FakeCodexSession with fn continuation(_self) {
       Some(
         Continuation::Continuation(fn() {
           let session = FakeCodexSession::{
+            id_value: _self.id_value,
             prompts: _self.continued_prompts,
             response,
             continued_prompts: [],
@@ -40,16 +43,23 @@ impl CliSession for FakeCodexSession with fn continuation(_self) {
 }
 
 ///|
+impl CliSession for FakeCodexSession with fn id(self) {
+  self.id_value
+}
+
+///|
 impl CliSession for FakeCodexSession with fn prompt(self, prompt) {
   self.prompts.push(prompt.text)
   FinalResponse::FinalResponse(
     self.response,
+    session_id?=CliSession::id(self),
     continuation?=CliSession::continuation(self),
   )
 }
 
 ///|
 struct FakeOpenCodeSession {
+  id_value : String?
   prompts : Array[String]
   response : String
   continued_prompts : Array[String]
@@ -63,6 +73,7 @@ impl CliSession for FakeOpenCodeSession with fn continuation(_self) {
       Some(
         Continuation::Continuation(fn() {
           let session = FakeOpenCodeSession::{
+            id_value: _self.id_value,
             prompts: _self.continued_prompts,
             response,
             continued_prompts: [],
@@ -76,10 +87,16 @@ impl CliSession for FakeOpenCodeSession with fn continuation(_self) {
 }
 
 ///|
+impl CliSession for FakeOpenCodeSession with fn id(self) {
+  self.id_value
+}
+
+///|
 impl CliSession for FakeOpenCodeSession with fn prompt(self, prompt) {
   self.prompts.push(prompt.text)
   FinalResponse::FinalResponse(
     self.response,
+    session_id?=CliSession::id(self),
     continuation?=CliSession::continuation(self),
   )
 }
@@ -87,6 +104,11 @@ impl CliSession for FakeOpenCodeSession with fn prompt(self, prompt) {
 ///|
 impl CliSession for FakeSession with fn continuation(self) {
   self.continuation_value
+}
+
+///|
+impl CliSession for FakeSession with fn id(self) {
+  self.id_value
 }
 
 ///|
@@ -102,6 +124,7 @@ impl CliSession for FakeSession with fn prompt(self, prompt) {
   }
   FinalResponse::FinalResponse(
     self.response,
+    session_id?=CliSession::id(self),
     continuation?=self.continuation_value,
   )
 }
@@ -117,6 +140,7 @@ async test "consumer swaps providers without changing the prompt flow" {
   let codex_continued_prompts : Array[String] = []
   let codex = Cli::Cli(fn() {
     let session = FakeCodexSession::{
+      id_value: Some("codex-thread"),
       prompts: codex_prompts,
       response: "codex response",
       continued_prompts: codex_continued_prompts,
@@ -128,6 +152,7 @@ async test "consumer swaps providers without changing the prompt flow" {
   let opencode_continued_prompts : Array[String] = []
   let opencode = Cli::Cli(fn() {
     let session = FakeOpenCodeSession::{
+      id_value: Some("opencode-session"),
       prompts: opencode_prompts,
       response: "opencode response",
       continued_prompts: opencode_continued_prompts,
@@ -141,6 +166,10 @@ async test "consumer swaps providers without changing the prompt flow" {
   assert_eq(opencode_prompts, ["same prompt"])
   inspect(codex_response.text, content="codex response")
   inspect(opencode_response.text, content="opencode response")
+  assert_eq(codex_response.session_id, Some("codex-thread"))
+  assert_eq(opencode_response.session_id, Some("opencode-session"))
+  assert_eq(codex_response.changed_files, [])
+  assert_eq(opencode_response.changed_files, [])
   let codex_continued = codex
     .continue_session(codex_response.continuation.unwrap())
     .prompt(Prompt::Prompt("codex next"))
@@ -157,6 +186,7 @@ async test "consumer swaps providers without changing the prompt flow" {
 async test "resume passes the opaque continuation unchanged" {
   let resumed : Array[String] = []
   let resumed_session = FakeSession::{
+    id_value: Some("continuation-a"),
     continuation_value: None,
     response: "continued",
     prompts: [],
@@ -173,12 +203,14 @@ async test "resume passes the opaque continuation unchanged" {
     .prompt(Prompt::Prompt("continue"))
   assert_eq(resumed, ["continuation-a"])
   inspect(response.text, content="continued")
+  assert_eq(response.session_id, Some("continuation-a"))
   assert_true(response.continuation is None)
 }
 
 ///|
 async test "provider errors pass through unchanged" {
   let session = FakeSession::{
+    id_value: None,
     continuation_value: None,
     response: "",
     prompts: [],
@@ -198,6 +230,7 @@ async test "provider errors pass through unchanged" {
 ///|
 async test "cancelling an in-flight prompt propagates cancellation" {
   let session = FakeSession::{
+    id_value: None,
     continuation_value: None,
     response: "unreachable",
     prompts: [],
@@ -223,4 +256,19 @@ async test "cancelling an in-flight prompt propagates cancellation" {
     }
     assert_true(cancelled)
   })
+}
+
+///|
+test "prompt keeps optional context files without changing text-only callers" {
+  let text_only = Prompt::Prompt("translate")
+  inspect(text_only.text, content="translate")
+  assert_eq(text_only.context_files, [])
+  let with_context = Prompt::Prompt("review", context_files=[
+    @path.Path("src/a.mbt"),
+    @path.Path("docs/b.md"),
+  ])
+  inspect(with_context.text, content="review")
+  assert_eq(with_context.context_files.map(fn(path) { path.to_string() }), [
+    "src/a.mbt", "docs/b.md",
+  ])
 }

@@ -2,12 +2,16 @@
 /// Text sent to a provider CLI session.
 pub struct Prompt {
   text : String
+  context_files : ReadOnlyArray[@path.Path]
 } derive(Debug, Eq)
 
 ///|
 /// Creates a provider-neutral prompt.
-pub fn Prompt::Prompt(text : String) -> Prompt {
-  { text, }
+pub fn Prompt::Prompt(
+  text : String,
+  context_files? : ReadOnlyArray[@path.Path] = [],
+) -> Prompt {
+  { text, context_files }
 }
 
 ///|
@@ -28,6 +32,8 @@ pub fn Continuation::Continuation(
 /// Final text and continuation returned by a completed prompt.
 pub struct FinalResponse {
   text : String
+  session_id : String?
+  changed_files : ReadOnlyArray[@path.Path]
   continuation : Continuation?
 }
 
@@ -35,9 +41,11 @@ pub struct FinalResponse {
 /// Creates a final response.
 pub fn FinalResponse::FinalResponse(
   text : String,
+  session_id? : String,
+  changed_files? : ReadOnlyArray[@path.Path] = [],
   continuation? : Continuation,
 ) -> FinalResponse {
-  { text, continuation }
+  { text, session_id, changed_files, continuation }
 }
 
 ///|
@@ -46,6 +54,7 @@ pub fn FinalResponse::FinalResponse(
 /// Cancelling the task running `prompt` cancels the provider call and propagates
 /// the cancellation error after provider cleanup.
 pub(open) trait CliSession {
+  fn id(Self) -> String?
   fn continuation(Self) -> Continuation?
   async fn prompt(Self, Prompt) -> FinalResponse
 }
