@@ -1,0 +1,15 @@
+supported_targets = "+wasm+native"
+
+import {
+  "totto2727/agent-sdk/cli",
+  "totto2727/codex-sdk/cli" @sdk,
+  "moonbitlang/x/path",
+}
+
+import {
+  "moonbitlang/async",
+  "moonbitlang/async/fs",
+  "moonbitlang/async/process",
+  "moonbitlang/core/string",
+  "moonbitlang/x/path",
+} for "test"

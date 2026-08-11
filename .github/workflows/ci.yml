@@ -10,10 +10,21 @@ permissions:
 
 jobs:
   check:
+    env:
+      NIX_DEV_SHELL: ci
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: totto2727-org/monorepo/.github/actions/setup-nix@main
+      - name: Verify agent CLIs
+        run: |
+          eval "$(nix print-dev-env "$GITHUB_WORKSPACE#$NIX_DEV_SHELL")"
+          codex --version
+          opencode --version
       - uses: totto2727-org/monorepo/.github/actions/setup-moonbit@main
+        with:
+          dev-shell: ${{ env.NIX_DEV_SHELL }}
       - uses: totto2727-org/monorepo/.github/actions/check-moonbit@main
+        with:
+          dev-shell: ${{ env.NIX_DEV_SHELL }}
