@@ -12,17 +12,8 @@ keywords = [ "agent", "cli", "codex", "opencode", "sdk", "moonbit" ]
 
 description = "Provider-neutral MoonBit interfaces for agent CLI SDKs"
 
-// Leave both settings unset for synchronous, backend-neutral libraries.
-//
-// For async libraries, uncomment supported_targets and exactly one
-// preferred_target. Choose the first viable preferred target in this order:
-// wasm, js, native. If a dependency supports fewer targets, narrow both
-// settings to match that dependency.
-//
-supported_targets = "+wasm+native"
 preferred_target = "wasm"
-// preferred_target = "js"
-// preferred_target = "native"
+supported_targets = "+wasm+native"
 
 import {
   "moonbitlang/async@0.20.3",
