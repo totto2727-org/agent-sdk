@@ -19,10 +19,10 @@ description = "Provider-neutral MoonBit interfaces for agent CLI SDKs"
 // wasm, js, native. If a dependency supports fewer targets, narrow both
 // settings to match that dependency.
 //
-supported_targets = "native"
-// preferred_target = "wasm"
+supported_targets = "+wasm+native"
+preferred_target = "wasm"
 // preferred_target = "js"
-preferred_target = "native"
+// preferred_target = "native"
 
 import {
   "moonbitlang/async@0.20.3",

@@ -28,6 +28,12 @@ flowchart LR
 
 `agent-sdk/cli` imports neither provider nor `agent-core-sdk`. Each adapter imports only the common package and its matching provider SDK. `agent-sdk` therefore has no direct dependency on `agent-core-sdk` and no provider-to-provider dependency.
 
+## Target support
+
+The module, common `src/cli` package, and both provider adapter packages declare `+wasm+native` support with `wasm` as the preferred target. Native remains supported, and both targets use the same source files and package layout.
+
+The adapters keep provider process behavior behind `codex-sdk/cli` and `opencode-sdk/cli`; `agent-sdk` does not add target-specific source directories, packages, backends, or shims. Target-unspecified validation uses Wasm, while a Wasm host must supply the process bridge required by the provider SDKs.
+
 ## Processing flow
 
 ```mermaid
@@ -81,17 +87,19 @@ Both adapter constructors retain their provider-native option types and accept a
 
 ## Development
 
-The module retains the template's `source = "./src"` layout and currently follows the native target supported by both provider CLI packages. Dependencies are declared according to MoonBit's official [module configuration](https://docs.moonbitlang.com/en/latest/toolchain/moon/module.html) and [package configuration](https://docs.moonbitlang.com/en/latest/toolchain/moon/package.html).
+The module retains the template's `source = "./src"` layout. Dependencies and target support are declared according to MoonBit's official [module configuration](https://docs.moonbitlang.com/en/latest/toolchain/moon/module.html) and [package configuration](https://docs.moonbitlang.com/en/latest/toolchain/moon/package.html).
 
-Run the standard module checks from the repository root once the provider SDK versions are available in the registry:
+The default Nix development shell contains only the MoonBit toolchain. The `ci` shell inherits that environment and adds Codex from [codex-cli-nix](https://github.com/sadjow/codex-cli-nix) and OpenCode from the [official OpenCode repository](https://github.com/anomalyco/opencode), so CLI process tests do not expand the default development closure.
+
+Run the standard module checks with the preferred target once the provider SDK versions are available in the registry:
 
 ```bash
 moon update
 moon info
-moon check --target native
-moon test --target native
-moon build --target native
+moon check
+moon test
+moon build
 moon package --list
 ```
 
-Before publication, validate with a `moon.work` overlay pinned to `agent-core-sdk` commit `127a11e9c4b0bf0067e3082a55af0a44e69c5fe0`, `codex-sdk` 0.2.0 commit `ea482e00842baf40f1a6103a21ca58ef0382acfa`, and `opencode-sdk` 0.3.0 commit `c86e8946c1e02b977ea0ae17e305b76aab6d7140`.
+CI loads the `ci` shell through the shared MoonBit actions on the monorepo `main` branch and runs target-unspecified checks against registry dependencies. It does not clone SDK source repositories or generate a `moon.work` overlay. Until the provider SDK versions are published, registry dependency resolution is expected to block the Draft PR before the MoonBit checks run.
