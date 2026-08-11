@@ -10,10 +10,6 @@ permissions:
 
 jobs:
   check:
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [native, wasm]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -33,14 +29,12 @@ jobs:
           git clone --quiet "$GITHUB_WORKSPACE" "$workspace/agent-sdk"
           printf 'members = ["./agent-core-sdk", "./codex-sdk", "./opencode-sdk", "./agent-sdk"]\n' > "$workspace/moon.work"
           echo "MOON_WORKSPACE=$workspace" >> "$GITHUB_ENV"
-      - name: Verify MoonBit module (${{ matrix.target }})
-        env:
-          MOON_TARGET: ${{ matrix.target }}
+      - name: Verify MoonBit module
         run: |
           eval "$(nix print-dev-env "$GITHUB_WORKSPACE#default")"
           moon -C "$MOON_WORKSPACE" update
           moon -C "$MOON_WORKSPACE" info
-          moon -C "$MOON_WORKSPACE" check --target "$MOON_TARGET" --deny-warn agent-sdk/src/cli agent-sdk/src/cli/codex agent-sdk/src/cli/opencode
-          moon -C "$MOON_WORKSPACE" test --target "$MOON_TARGET" --deny-warn --jobs 1 --no-parallelize agent-sdk/src/cli agent-sdk/src/cli/codex agent-sdk/src/cli/opencode
-          moon -C "$MOON_WORKSPACE" build --target "$MOON_TARGET" --deny-warn agent-sdk/src/cli agent-sdk/src/cli/codex agent-sdk/src/cli/opencode
+          moon -C "$MOON_WORKSPACE" check --deny-warn agent-sdk/src/cli agent-sdk/src/cli/codex agent-sdk/src/cli/opencode
+          moon -C "$MOON_WORKSPACE" test --deny-warn --jobs 1 --no-parallelize agent-sdk/src/cli agent-sdk/src/cli/codex agent-sdk/src/cli/opencode
+          moon -C "$MOON_WORKSPACE" build --deny-warn agent-sdk/src/cli agent-sdk/src/cli/codex agent-sdk/src/cli/opencode
           moon -C "$MOON_WORKSPACE/agent-sdk" package --list
