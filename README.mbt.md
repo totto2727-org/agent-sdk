@@ -89,6 +89,8 @@ Both adapter constructors retain their provider-native option types and accept a
 
 The module retains the template's `source = "./src"` layout. Dependencies and target support are declared according to MoonBit's official [module configuration](https://docs.moonbitlang.com/en/latest/toolchain/moon/module.html) and [package configuration](https://docs.moonbitlang.com/en/latest/toolchain/moon/package.html).
 
+The default Nix development shell contains only the MoonBit toolchain. The `ci` shell inherits that environment and adds Codex from [codex-cli-nix](https://github.com/sadjow/codex-cli-nix) and OpenCode from the [official OpenCode repository](https://github.com/anomalyco/opencode), so CLI process tests do not expand the default development closure.
+
 Run the standard module checks with the preferred target once the provider SDK versions are available in the registry:
 
 ```bash
@@ -100,4 +102,4 @@ moon build
 moon package --list
 ```
 
-Before publication, CI validates the preferred target through a temporary `moon.work` overlay pinned to `agent-core-sdk` commit `127a11e9c4b0bf0067e3082a55af0a44e69c5fe0`, `codex-sdk` commit `15577d304a2b5888d4032de406176254754ccb57`, and `opencode-sdk` commit `03660eca982c7867155ff17dff0aced279a22902`. No dependency override or workspace file is committed.
+CI loads the `ci` shell through shared MoonBit actions pinned to monorepo commit `380f76bdd0f0ccc307c15ac9f48d7a7d851d1409` and runs target-unspecified checks against registry dependencies. It does not clone SDK source repositories or generate a `moon.work` overlay. Until the provider SDK versions are published, registry dependency resolution is expected to block the Draft PR before the MoonBit checks run.
