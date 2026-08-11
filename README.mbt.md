@@ -97,7 +97,7 @@ Run the standard module checks with the preferred target once the provider SDK v
 moon update
 moon info
 moon check
-moon test --jobs 1 --no-parallelize
+moon test
 moon build
 moon package --list
 ```
