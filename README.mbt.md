@@ -102,4 +102,4 @@ moon build
 moon package --list
 ```
 
-CI loads the `ci` shell through shared MoonBit actions pinned to monorepo commit `380f76bdd0f0ccc307c15ac9f48d7a7d851d1409` and runs target-unspecified checks against registry dependencies. It does not clone SDK source repositories or generate a `moon.work` overlay. Until the provider SDK versions are published, registry dependency resolution is expected to block the Draft PR before the MoonBit checks run.
+CI loads the `ci` shell through the shared MoonBit actions on the monorepo `main` branch and runs target-unspecified checks against registry dependencies. It does not clone SDK source repositories or generate a `moon.work` overlay. Until the provider SDK versions are published, registry dependency resolution is expected to block the Draft PR before the MoonBit checks run.
