@@ -1,7 +1,7 @@
 supported_targets = "+wasm+native"
 
 import {
-  "totto2727/agent-sdk/cli" @cli,
+  "totto2727/agent-sdk/cli",
   "totto2727/opencode-sdk/cli" @sdk,
 }
 

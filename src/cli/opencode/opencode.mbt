@@ -13,13 +13,11 @@ impl @cli.CliSession for OpenCodeCliSession with fn id(self) {
 
 ///|
 impl @cli.CliSession for OpenCodeCliSession with fn continuation(self) {
-  self.thread.id().map(fn(continuation_id) {
+  self.thread
+  .id()
+  .map(fn(continuation_id) {
     @cli.Continuation::Continuation(fn() {
-      opencode_session(
-        self.client,
-        self.thread_options,
-        Some(continuation_id),
-      )
+      opencode_session(self.client, self.thread_options, Some(continuation_id))
     })
   })
 }
@@ -32,7 +30,7 @@ impl @cli.CliSession for OpenCodeCliSession with fn prompt(self, prompt) {
     turn.final_response,
     session_id?=self.thread.id(),
     changed_files=[],
-    continuation?=continuation,
+    continuation?,
   )
 }
 

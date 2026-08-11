@@ -17,9 +17,7 @@ async fn with_fake_codex(run : async (FakeCodex) -> Unit) -> Unit {
   )
   @fs.chmod(executable.to_string(), 0o755)
   let fixture = FakeCodex::{ executable, records }
-  try {
-    run(fixture)
-  } catch {
+  run(fixture) catch {
     error => {
       @async.protect_from_cancel(async fn() { @fs.rmdir(root, recursive=true) })
       raise error
@@ -46,14 +44,15 @@ fn FakeCodex::options(
   for index, event in events {
     env["FAKE_CODEX_EVENTS_\{index + 1}"] = event
   }
-  @sdk.CodexOptions::CodexOptions(
-    codex_path_override=self.executable,
-    env=env,
-  )
+  @sdk.CodexOptions::CodexOptions(codex_path_override=self.executable, env~)
 }
 
 ///|
-async fn FakeCodex::record(self : FakeCodex, name : String, call : Int) -> String {
+async fn FakeCodex::record(
+  self : FakeCodex,
+  name : String,
+  call : Int,
+) -> String {
   @fs.read_file("\{self.records}/\{name}.\{call}").text()
 }
 
@@ -73,15 +72,12 @@ async fn codex_process_is_running(pid : Int) -> Bool {
 }
 
 ///|
-fn codex_events(
-  id : String,
-  text : String,
-  changed_path? : String,
-) -> String {
+fn codex_events(id : String, text : String, changed_path? : String) -> String {
   let patch = match changed_path {
-    Some(path) => [
-      "{\"type\":\"item.completed\",\"item\":{\"id\":\"patch-1\",\"type\":\"file_change\",\"changes\":[{\"path\":\"\{path}\",\"kind\":\"update\"}],\"status\":\"completed\"}}",
-    ]
+    Some(path) =>
+      [
+        "{\"type\":\"item.completed\",\"item\":{\"id\":\"patch-1\",\"type\":\"file_change\",\"changes\":[{\"path\":\"\{path}\",\"kind\":\"update\"}],\"status\":\"completed\"}}",
+      ]
     None => []
   }
   [
@@ -95,27 +91,28 @@ fn codex_events(
 
 ///|
 fn fake_codex_script() -> String {
-  let script = #|#!/bin/sh
-  #|set -eu
-  #|record_dir="${FAKE_CODEX_RECORD_DIR:?}"
-  #|counter="$record_dir/counter"
-  #|call=0
-  #|if [ -f "$counter" ]; then call=$(/bin/cat "$counter"); fi
-  #|call=$((call + 1))
-  #|printf '%s' "$call" > "$counter"
-  #|printf '%s\n' "$@" > "$record_dir/args.$call"
-  #|/bin/cat > "$record_dir/input.$call"
-  #|printf '%s\n' "$$" > "$record_dir/pid.$call"
-  #|case "$call" in
-  #|  1) events="${FAKE_CODEX_EVENTS_1-}" ;;
-  #|  2) events="${FAKE_CODEX_EVENTS_2-}" ;;
-  #|  3) events="${FAKE_CODEX_EVENTS_3-}" ;;
-  #|  *) events="${FAKE_CODEX_EVENTS-}" ;;
-  #|esac
-  #|if [ -n "$events" ]; then printf '%s\n' "$events"; fi
-  #|if [ "${FAKE_CODEX_PAUSE-}" = "1" ]; then exec /bin/sleep 30; fi
-  #|exit "${FAKE_CODEX_EXIT_CODE-0}"
-  #|
+  let script =
+    #|#!/bin/sh
+    #|set -eu
+    #|record_dir="${FAKE_CODEX_RECORD_DIR:?}"
+    #|counter="$record_dir/counter"
+    #|call=0
+    #|if [ -f "$counter" ]; then call=$(/bin/cat "$counter"); fi
+    #|call=$((call + 1))
+    #|printf '%s' "$call" > "$counter"
+    #|printf '%s\n' "$@" > "$record_dir/args.$call"
+    #|/bin/cat > "$record_dir/input.$call"
+    #|printf '%s\n' "$$" > "$record_dir/pid.$call"
+    #|case "$call" in
+    #|  1) events="${FAKE_CODEX_EVENTS_1-}" ;;
+    #|  2) events="${FAKE_CODEX_EVENTS_2-}" ;;
+    #|  3) events="${FAKE_CODEX_EVENTS_3-}" ;;
+    #|  *) events="${FAKE_CODEX_EVENTS-}" ;;
+    #|esac
+    #|if [ -n "$events" ]; then printf '%s\n' "$events"; fi
+    #|if [ "${FAKE_CODEX_PAUSE-}" = "1" ]; then exec /bin/sleep 30; fi
+    #|exit "${FAKE_CODEX_EXIT_CODE-0}"
+    #|
   script
 }
 
@@ -131,17 +128,16 @@ async test "Codex adapter maps prompt, continuation, errors, and cancellation" {
     let session = cli.start()
     assert_eq(session.id(), None)
     let first = session.prompt(
-      @cli.Prompt::Prompt(
-        "hello",
-        context_files=[@path.Path("docs/a.md"), @path.Path("src/b.mbt")],
-      ),
+      @cli.Prompt::Prompt("hello", context_files=[
+        @path.Path("docs/a.md"),
+        @path.Path("src/b.mbt"),
+      ]),
     )
     inspect(first.text, content="first")
     assert_eq(first.session_id, Some("thread-1"))
-    assert_eq(
-      first.changed_files.map(fn(path) { path.to_string() }),
-      ["src/changed.mbt"],
-    )
+    assert_eq(first.changed_files.map(fn(path) { path.to_string() }), [
+      "src/changed.mbt",
+    ])
     assert_true(first.continuation is Some(_))
     let second = cli
       .continue_session(first.continuation.unwrap())

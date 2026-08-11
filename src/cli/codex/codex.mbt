@@ -14,7 +14,9 @@ impl @cli.CliSession for CodexCliSession with fn id(self) {
 
 ///|
 impl @cli.CliSession for CodexCliSession with fn continuation(self) {
-  self.thread.id().map(fn(continuation_id) {
+  self.thread
+  .id()
+  .map(fn(continuation_id) {
     @cli.Continuation::Continuation(fn() {
       codex_session(
         self.client,
@@ -37,7 +39,7 @@ impl @cli.CliSession for CodexCliSession with fn prompt(self, prompt) {
     turn.final_response,
     session_id?=self.thread.id(),
     changed_files=codex_changed_files(turn.items),
-    continuation?=continuation,
+    continuation?,
   )
 }
 
