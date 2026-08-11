@@ -13,6 +13,7 @@ keywords = [ "agent", "cli", "codex", "opencode", "sdk", "moonbit" ]
 description = "Provider-neutral MoonBit interfaces for agent CLI SDKs"
 
 preferred_target = "wasm"
+
 supported_targets = "+wasm+native"
 
 import {
