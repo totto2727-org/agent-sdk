@@ -30,9 +30,9 @@ flowchart LR
 
 ## Target support
 
-The module, common `src/cli` package, and both provider adapter packages declare `+wasm+native` support with `native` as the preferred target. Every supported target uses the same source files and package layout.
+The module, common `src/cli` package, and both provider adapter packages declare `+wasm+native` support with `wasm` as the preferred target. Native remains supported, and both targets use the same source files and package layout.
 
-The adapters keep provider process behavior behind `codex-sdk/cli` and `opencode-sdk/cli`; `agent-sdk` does not add target-specific source directories, packages, backends, or shims. Native remains preferred because the provider SDKs ultimately connect to installed CLI processes. A Wasm host must supply the process bridge required by those provider SDKs.
+The adapters keep provider process behavior behind `codex-sdk/cli` and `opencode-sdk/cli`; `agent-sdk` does not add target-specific source directories, packages, backends, or shims. Target-unspecified validation uses Wasm, while a Wasm host must supply the process bridge required by the provider SDKs.
 
 ## Processing flow
 
