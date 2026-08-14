@@ -1,6 +1,6 @@
 name = "totto2727/agent-sdk"
 
-version = "0.1.1"
+version = "0.2.0"
 
 readme = "README.mbt.md"
 
@@ -19,8 +19,8 @@ supported_targets = "+wasm+native"
 import {
   "moonbitlang/async@0.20.3",
   "moonbitlang/x@0.4.47",
-  "totto2727/codex-sdk@0.2.1",
-  "totto2727/opencode-sdk@0.3.1",
+  "totto2727/codex-sdk@0.4.0",
+  "totto2727/opencode-sdk@0.4.0",
 }
 
 source = "./src"
