@@ -1,7 +1,7 @@
 ///|
 /// Provider adapter session backed by a Codex SDK thread.
 priv struct CodexCliSession {
-  client : @sdk.Codex
+  client : @sdk.Client
   thread : @sdk.Thread
   thread_options : @sdk.ThreadOptions
   turn_options : @sdk.TurnOptions
@@ -80,7 +80,7 @@ fn codex_changed_files(
 
 ///|
 fn codex_session(
-  client : @sdk.Codex,
+  client : @sdk.Client,
   thread_options : @sdk.ThreadOptions,
   turn_options : @sdk.TurnOptions,
   continuation_id : String?,
@@ -102,12 +102,12 @@ fn codex_session(
 /// Creates the provider-neutral CLI adapter while retaining Codex-native
 /// client, thread, and turn options at this package boundary.
 pub fn codex_cli(
-  options? : @sdk.CodexOptions = @sdk.CodexOptions::CodexOptions(),
+  options? : @sdk.ClientOptions = @sdk.ClientOptions::ClientOptions(),
   thread_options? : @sdk.ThreadOptions = @sdk.ThreadOptions::ThreadOptions(),
   turn_options? : @sdk.TurnOptions = @sdk.TurnOptions::TurnOptions(),
   resume_thread_id? : String,
 ) -> @cli.Cli {
-  let client = @sdk.Codex::Codex(options~)
+  let client = @sdk.Client::Client(options~)
   @cli.Cli::Cli(fn() {
     codex_session(client, thread_options, turn_options, resume_thread_id)
   })

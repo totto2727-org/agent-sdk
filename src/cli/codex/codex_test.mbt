@@ -32,7 +32,7 @@ fn FakeCodex::options(
   events : Array[String],
   pause? : Bool = false,
   exit_code? : Int = 0,
-) -> @sdk.CodexOptions {
+) -> @sdk.ClientOptions {
   let env : Map[String, String] = {
     "PATH": "/usr/bin:/bin",
     "FAKE_CODEX_RECORD_DIR": self.records,
@@ -44,7 +44,10 @@ fn FakeCodex::options(
   for index, event in events {
     env["FAKE_CODEX_EVENTS_\{index + 1}"] = event
   }
-  @sdk.CodexOptions::CodexOptions(codex_path_override=self.executable, env~)
+  @sdk.ClientOptions::ClientOptions(
+    executable_path_override=self.executable,
+    env~,
+  )
 }
 
 ///|
@@ -167,7 +170,7 @@ async test "Codex adapter maps prompt, continuation, errors, and cancellation" {
       cli.start().prompt(@cli.Prompt::Prompt("fail")) |> ignore
       0
     } catch {
-      @sdk.CodexSdkError::@sdk.ExecFailed(code~, ..) => code
+      @sdk.SdkError::@sdk.ExecFailed(code~, ..) => code
       _ => -1
     }
     inspect(code, content="7")

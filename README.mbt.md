@@ -7,8 +7,8 @@ Provider-neutral MoonBit interfaces for running Codex and OpenCode CLI sessions 
 | Package | Responsibility |
 | --- | --- |
 | `totto2727/agent-sdk/cli` | Common text/context prompt, session identifier, opaque continuation, final response, changed-file list, and cancellable session contract |
-| `totto2727/agent-sdk/cli/codex` | Codex adapter configured with native `CodexOptions`, `ThreadOptions`, and `TurnOptions` |
-| `totto2727/agent-sdk/cli/opencode` | OpenCode adapter configured with native `OpenCodeOptions` and `ThreadOptions` |
+| `totto2727/agent-sdk/cli/codex` | Codex adapter configured with native `ClientOptions`, `ThreadOptions`, and `TurnOptions` |
+| `totto2727/agent-sdk/cli/opencode` | OpenCode adapter configured with native `ClientOptions` and `ThreadOptions` |
 
 `src/server/.gitkeep` only reserves a future directory. This module contains no Server package, contract, adapter, or implementation.
 
@@ -69,7 +69,7 @@ Choose an adapter without changing the consumer flow:
 ```mbt check
 ///|
 let codex = @codex_adapter.codex_cli(
-  options=@codex.CodexOptions::CodexOptions(),
+  options=@codex.ClientOptions::ClientOptions(),
   thread_options=@codex.ThreadOptions::ThreadOptions(),
   turn_options=@codex.TurnOptions::TurnOptions(),
   resume_thread_id?=None,
@@ -77,7 +77,7 @@ let codex = @codex_adapter.codex_cli(
 
 ///|
 let opencode = @opencode_adapter.opencode_cli(
-  options=@opencode.OpenCodeOptions::OpenCodeOptions(),
+  options=@opencode.ClientOptions::ClientOptions(),
   thread_options=@opencode.ThreadOptions::ThreadOptions(),
   resume_thread_id?=None,
 )
@@ -91,7 +91,7 @@ The module retains the template's `source = "./src"` layout. Dependencies and ta
 
 The default Nix development shell contains only the MoonBit toolchain. The `ci` shell inherits that environment and adds Codex from [codex-cli-nix](https://github.com/sadjow/codex-cli-nix) and OpenCode from the [official OpenCode repository](https://github.com/anomalyco/opencode), so CLI process tests do not expand the default development closure.
 
-Run the standard module checks with the preferred target once the provider SDK versions are available in the registry:
+Run the standard module checks with the preferred target:
 
 ```bash
 moon update
@@ -102,4 +102,4 @@ moon build
 moon package --list
 ```
 
-CI loads the `ci` shell through the shared MoonBit actions on the monorepo `main` branch and runs target-unspecified checks against registry dependencies. It does not clone SDK source repositories or generate a `moon.work` overlay. Until the provider SDK versions are published, registry dependency resolution is expected to block the Draft PR before the MoonBit checks run.
+CI loads the `ci` shell through the shared MoonBit actions on the monorepo `main` branch and runs target-unspecified checks against registry dependencies. It does not clone SDK source repositories or generate a `moon.work` overlay.

@@ -1,7 +1,7 @@
 ///|
 /// Provider adapter session backed by an OpenCode SDK thread.
 priv struct OpenCodeCliSession {
-  client : @sdk.OpenCode
+  client : @sdk.Client
   thread : @sdk.Thread
   thread_options : @sdk.ThreadOptions
 }
@@ -48,7 +48,7 @@ fn opencode_input(prompt : @cli.Prompt) -> @sdk.Input {
 
 ///|
 fn opencode_session(
-  client : @sdk.OpenCode,
+  client : @sdk.Client,
   thread_options : @sdk.ThreadOptions,
   continuation_id : String?,
 ) -> &@cli.CliSession {
@@ -64,11 +64,11 @@ fn opencode_session(
 /// Creates the provider-neutral CLI adapter while retaining OpenCode-native
 /// client and thread options at this package boundary.
 pub fn opencode_cli(
-  options? : @sdk.OpenCodeOptions = @sdk.OpenCodeOptions::OpenCodeOptions(),
+  options? : @sdk.ClientOptions = @sdk.ClientOptions::ClientOptions(),
   thread_options? : @sdk.ThreadOptions = @sdk.ThreadOptions::ThreadOptions(),
   resume_thread_id? : String,
 ) -> @cli.Cli {
-  let client = @sdk.OpenCode::OpenCode(options~)
+  let client = @sdk.Client::Client(options~)
   @cli.Cli::Cli(fn() {
     opencode_session(client, thread_options, resume_thread_id)
   })

@@ -32,7 +32,7 @@ fn FakeOpenCode::options(
   events : Array[String],
   pause? : Bool = false,
   exit_code? : Int = 0,
-) -> @sdk.OpenCodeOptions {
+) -> @sdk.ClientOptions {
   let env : Map[String, String] = {
     "PATH": "/usr/bin:/bin",
     "FAKE_OPENCODE_RECORD_DIR": self.records,
@@ -44,8 +44,8 @@ fn FakeOpenCode::options(
   for index, event in events {
     env["FAKE_OPENCODE_EVENTS_\{index + 1}"] = event
   }
-  @sdk.OpenCodeOptions::OpenCodeOptions(
-    opencode_path_override=self.executable,
+  @sdk.ClientOptions::ClientOptions(
+    executable_path_override=self.executable,
     env~,
   )
 }
@@ -160,7 +160,7 @@ async test "OpenCode adapter maps prompt, continuation, errors, and cancellation
       cli.start().prompt(@cli.Prompt::Prompt("fail")) |> ignore
       0
     } catch {
-      @sdk.OpenCodeSdkError::@sdk.ExecFailed(code~, ..) => code
+      @sdk.SdkError::@sdk.ExecFailed(code~, ..) => code
       _ => -1
     }
     inspect(code, content="7")
