@@ -66,8 +66,9 @@ moon add totto2727/agent-sdk@0.2.0
 2. Import the common package and the provider adapter package needed by your application.
 
 ```mbt nocheck
+///|
 import {
-  "totto2727/agent-sdk/cli" @cli,
+  "totto2727/agent-sdk/cli",
   "totto2727/agent-sdk/cli/codex" @codex_adapter,
 }
 ```
@@ -78,10 +79,10 @@ The [Mooncakes API reference](https://mooncakes.io/docs/totto2727/agent-sdk) con
 
 ## Development
 
-For repository structure and development commands, see [AGENTS.md](../../AGENTS.md).
+For repository structure and development commands, see [AGENTS.md](./AGENTS.md).
 
 ## License
 
-MIT; see [LICENSE](../../LICENSE).
+MIT; see [LICENSE](./LICENSE).
 
 _This README was generated from the [share-artifact skill](https://raw.githubusercontent.com/totto2727-org/agent/refs/heads/main/plugins/totto2727-coding/skills/share-artifact/SKILL.md) and [README template](https://raw.githubusercontent.com/totto2727-org/agent/refs/heads/main/plugins/totto2727-coding/skills/share-artifact/readme/template.md)._
