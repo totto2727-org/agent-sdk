@@ -6,7 +6,9 @@
 src/cli/          Provider-neutral prompt, session, continuation, and response contracts
 src/cli/codex/    Codex SDK adapter
 src/cli/opencode/ OpenCode SDK adapter
-README.mbt.md     Canonical user-facing README and literate MoonBit examples
+src/cli/README.mbt.md
+                  Canonical user-facing README and literate MoonBit examples
+README.mbt.md     Relative symlink to src/cli/README.mbt.md
 README.md         Relative symlink to README.mbt.md
 moon.mod          Module metadata, registry dependencies, and target support
 ```
@@ -19,9 +21,9 @@ moon.mod          Module metadata, registry dependencies, and target support
 
 - Use the repository's pinned MoonBit toolchain through the active Nix or direnv environment.
 
-- Keep `README.mbt.md` canonical and preserve the relative `README.md -> README.mbt.md` symlink.
+- Keep `src/cli/README.mbt.md` canonical and preserve the relative `README.mbt.md -> src/cli/README.mbt.md` and `README.md -> README.mbt.md` symlinks.
 
-- Validate the canonical README through the `src/cli/README.mbt.md -> ../../README.mbt.md` package-local symlink because the module root has no `moon.pkg`.
+- Validate the canonical README from the `src/cli` package and through the literal root `README.mbt.md` symlink because the module root has no `moon.pkg`.
 
 - Do not create `CLAUDE.md`; `AGENTS.md` is the repository's developer and agent guidance.
 
@@ -35,9 +37,13 @@ moon.mod          Module metadata, registry dependencies, and target support
 
 - `moon check` — Type-check all module packages for the preferred target.
 
-- `(cd src/cli && moon check)` — Validate checked MoonBit examples in the canonical README through the package-local symlink.
+- `moon fmt --check` — Verify MoonBit formatting, including the physical canonical README.
 
-- `(cd src/cli && moon test)` — Run executable MoonBit examples in the canonical README through the package-local symlink.
+- `(cd src/cli && moon check)` — Validate checked MoonBit examples in the canonical README.
+
+- `(cd src/cli && moon test)` — Run executable MoonBit examples in the canonical README.
+
+- `moon test README.mbt.md` — Run executable examples through the literal root README symlink.
 
 - `moon test` — Run package tests, including provider adapter process fixtures.
 
@@ -69,7 +75,7 @@ moon.mod          Module metadata, registry dependencies, and target support
 
 - The module and all three packages declare `+wasm+native`, with `wasm` as the preferred target.
 
-- Keep one target-neutral source layout. The selected provider SDK owns the process bridge required by a Wasm host.
+- Keep one target-neutral source layout. The provider SDK stack, including its shared `agent-core` dependency, owns the process bridge required by a Wasm host; `agent-sdk` only consumes that provider-facing stack.
 
 - `moon.mod` is the publication source of truth; use registry dependencies instead of local source overlays or generated `moon.work` files.
 
