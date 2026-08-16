@@ -21,6 +21,10 @@ moon.mod          Module metadata, registry dependencies, and target support
 
 - Keep `README.mbt.md` canonical and preserve the relative `README.md -> README.mbt.md` symlink.
 
+- Validate the canonical README through the `src/cli/README.mbt.md -> ../../README.mbt.md` package-local symlink because the module root has no `moon.pkg`.
+
+- Do not create `CLAUDE.md`; `AGENTS.md` is the repository's developer and agent guidance.
+
 - Do not add a second README, a generated API dump, or provider-specific source package under the common `src/cli` package.
 
 ### Standard tasks
@@ -31,7 +35,9 @@ moon.mod          Module metadata, registry dependencies, and target support
 
 - `moon check` — Type-check all module packages for the preferred target.
 
-- `moon check README.mbt.md` — Validate checked MoonBit examples in the canonical README.
+- `(cd src/cli && moon check)` — Validate checked MoonBit examples in the canonical README through the package-local symlink.
+
+- `(cd src/cli && moon test)` — Run executable MoonBit examples in the canonical README through the package-local symlink.
 
 - `moon test` — Run package tests, including provider adapter process fixtures.
 

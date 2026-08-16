@@ -6,30 +6,21 @@ This document is canonical `README.mbt.md`; maintain `README.md` as the relative
 
 ## Usage
 
-Use the same consumer flow with either provider adapter:
+Create provider-neutral prompt values in the common package:
 
 ```mbt check
 ///|
-async fn run(cli : @cli.Cli, prompt : String) -> @cli.FinalResponse {
-  cli.start().prompt(@cli.Prompt::Prompt(prompt))
+test "construct a prompt for a provider session" {
+  let prompt = @cli.Prompt::Prompt("Summarize the repository", context_files=[])
+  assert_eq(prompt.text, "Summarize the repository")
 }
 ```
 
-Construct an adapter with provider-native options, then pass its `Cli` value to the shared flow:
+Construct an adapter with provider-native options, then pass its `Cli` value to the shared flow. The selected adapter package supplies its native option types:
 
-```mbt check
-///|
-let codex = @codex_adapter.codex_cli(
-  options=@codex.ClientOptions::ClientOptions(),
-  thread_options=@codex.ThreadOptions::ThreadOptions(),
-  turn_options=@codex.TurnOptions::TurnOptions(),
-)
-
-///|
-let opencode = @opencode_adapter.opencode_cli(
-  options=@opencode.ClientOptions::ClientOptions(),
-  thread_options=@opencode.ThreadOptions::ThreadOptions(),
-)
+```mbt
+let codex = @codex_adapter.codex_cli()
+let opencode = @opencode_adapter.opencode_cli()
 ```
 
 Pass `Prompt::Prompt(text, context_files=[...])` when a provider should receive caller-ordered workspace files. Resume a completed response with `Cli::continue_session(response.continuation.unwrap())` when it exposes a continuation.
