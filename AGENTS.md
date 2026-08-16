@@ -4,30 +4,29 @@
 
 ```text
 src/cli/          Provider-neutral prompt, session, continuation, and response contracts
-src/cli/codex/    Codex SDK adapter
-src/cli/opencode/ OpenCode SDK adapter
-src/cli/README.mbt.md
-                  Canonical user-facing README and literate MoonBit examples
-README.mbt.md     Relative symlink to src/cli/README.mbt.md
+src/cli/codex/    Codex SDK adapter and package README
+src/cli/opencode/ OpenCode SDK adapter and package README
+README.mbt.md     Canonical module overview and literate MoonBit document
 README.md         Relative symlink to README.mbt.md
+LICENSE           Module license
 moon.mod          Module metadata, registry dependencies, and target support
 ```
+
+The package-specific README files document only the public contract owned by their package; module-wide guidance remains here.
 
 ## Development commands
 
 ### Execution rules
 
-- Run MoonBit commands from the module root.
+- Run MoonBit commands from the module root unless a command explicitly targets a package README.
 
-- Use the repository's pinned MoonBit toolchain through the active Nix or direnv environment.
+- Use the pinned MoonBit toolchain from the active Nix or direnv environment.
 
-- Keep `src/cli/README.mbt.md` canonical and preserve the relative `README.mbt.md -> src/cli/README.mbt.md` and `README.md -> README.mbt.md` symlinks.
+- Keep `README.mbt.md` as the physical module overview and preserve the root `README.md -> README.mbt.md` relative symlink.
 
-- Validate the canonical README from the `src/cli` package and through the literal root `README.mbt.md` symlink because the module root has no `moon.pkg`.
+- Keep checked examples executable and use `moon.pkg` test-only imports for dependencies needed only by tests or documentation tests.
 
-- Do not create `CLAUDE.md`; `AGENTS.md` is the repository's developer and agent guidance.
-
-- Do not add a second README, a generated API dump, or provider-specific source package under the common `src/cli` package.
+- Do not create `CLAUDE.md`, duplicate module-wide README content in a package README, or add provider-specific imports to `src/cli`.
 
 ### Standard tasks
 
@@ -35,19 +34,33 @@ moon.mod          Module metadata, registry dependencies, and target support
 
 - `moon info` — Inspect module and package metadata.
 
+- `moon fmt --check` — Verify MoonBit formatting, including literate README files.
+
 - `moon check` — Type-check all module packages for the preferred target.
 
-- `moon fmt --check` — Verify MoonBit formatting, including the physical canonical README.
+- `moon check --target native` — Type-check all module packages for the native target.
 
-- `(cd src/cli && moon check)` — Validate checked MoonBit examples in the canonical README.
+- `moon check README.mbt.md` — Validate the root module README.
 
-- `(cd src/cli && moon test)` — Run executable MoonBit examples in the canonical README.
+- `(cd src/cli && moon check README.mbt.md)` — Validate the common package README.
 
-- `moon test README.mbt.md` — Run executable examples through the literal root README symlink.
+- `(cd src/cli/codex && moon check README.mbt.md)` — Validate the Codex package README.
+
+- `(cd src/cli/opencode && moon check README.mbt.md)` — Validate the OpenCode package README.
 
 - `moon test` — Run package tests, including provider adapter process fixtures.
 
-- `moon build` — Build all module packages for the preferred target.
+- `moon test --target native` — Run package tests for the native target.
+
+- The root README is a module overview without executable MoonBit blocks; run the package README commands below for literate examples.
+
+- `(cd src/cli && moon test README.mbt.md)` — Execute the common package README examples.
+
+- `(cd src/cli/codex && moon test README.mbt.md)` — Execute the Codex package README examples.
+
+- `(cd src/cli/opencode && moon test README.mbt.md)` — Execute the OpenCode package README examples.
+
+- `moon build --target wasm` and `moon build --target native` — Build all module packages for both supported targets.
 
 - `moon package --list` — Verify package publication contents.
 
@@ -75,7 +88,7 @@ moon.mod          Module metadata, registry dependencies, and target support
 
 - The module and all three packages declare `+wasm+native`, with `wasm` as the preferred target.
 
-- Keep one target-neutral source layout. The provider SDK stack, including its shared `agent-core` dependency, owns the process bridge required by a Wasm host; `agent-sdk` only consumes that provider-facing stack.
+- Keep one target-neutral source layout. The provider SDK stack owns the process bridge required by a Wasm host; `agent-sdk` only consumes that provider-facing stack.
 
 - `moon.mod` is the publication source of truth; use registry dependencies instead of local source overlays or generated `moon.work` files.
 
@@ -95,6 +108,6 @@ moon.mod          Module metadata, registry dependencies, and target support
 
 - Preserve cancellation ownership: cancelling the task that runs `CliSession::prompt` must cancel and clean up the provider process before propagating the cancellation error.
 
-- When changing public behavior, update the corresponding `///` documentation and README usage summary together, then run the full module checks.
+- When changing public behavior, update the corresponding `///` documentation and the package README usage summary together, then run the full module checks.
 
 _This AGENTS.md was generated from the [share-artifact skill](https://raw.githubusercontent.com/totto2727-org/agent/refs/heads/main/plugins/totto2727-coding/skills/share-artifact/SKILL.md) and [AGENTS template](https://raw.githubusercontent.com/totto2727-org/agent/refs/heads/main/plugins/totto2727-coding/skills/share-artifact/agents/template.md)._
