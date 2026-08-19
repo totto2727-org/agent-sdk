@@ -6,13 +6,13 @@ Provider-neutral MoonBit interfaces for running Codex and OpenCode CLI sessions 
 
 Use the provider-neutral session contract from the common [CLI package](./src/cli/README.mbt.md), then select the [Codex adapter](./src/cli/codex/README.mbt.md) or [OpenCode adapter](./src/cli/opencode/README.mbt.md).
 
-After adding the packages described in [Setup](#setup), start a session and submit a prompt:
+After adding the packages described in [Setup](#setup), ask Codex to summarize a repository and return its provider-neutral response:
 
 ```mbt check
 ///|
-pub async fn run_with_codex(prompt : String) -> @cli.FinalResponse {
+pub async fn summarize_repository() -> @cli.FinalResponse {
   let response = @codex_adapter.codex_cli().start().prompt(
-    @cli.Prompt::Prompt(prompt),
+    @cli.Prompt::Prompt("Summarize the repository status"),
   )
   response
 }
