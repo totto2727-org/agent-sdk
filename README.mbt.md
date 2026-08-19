@@ -8,6 +8,21 @@ This document is canonical `README.mbt.md`; maintain `README.md` as the relative
 
 Use the provider-neutral session contract from the common [CLI package](./src/cli/README.mbt.md), then select the [Codex adapter](./src/cli/codex/README.mbt.md) or [OpenCode adapter](./src/cli/opencode/README.mbt.md).
 
+For example, import the common contract and Codex adapter in a consumer package, then start a session and submit a prompt:
+
+```mbt check
+///|
+import {
+  "totto2727/agent-sdk/cli" @cli,
+  "totto2727/agent-sdk/cli/codex" @codex_adapter,
+}
+
+///|
+async fn run_with_codex(prompt : String) -> @cli.FinalResponse {
+  @codex_adapter.codex_cli().start().prompt(@cli.Prompt::Prompt(prompt))
+}
+```
+
 ## Key features
 
 - One provider-neutral `Cli`, `CliSession`, `Prompt`, and `FinalResponse` contract for both adapters.
