@@ -8,18 +8,15 @@ This document is canonical `README.mbt.md`; maintain `README.md` as the relative
 
 Use the provider-neutral session contract from the common [CLI package](./src/cli/README.mbt.md), then select the [Codex adapter](./src/cli/codex/README.mbt.md) or [OpenCode adapter](./src/cli/opencode/README.mbt.md).
 
-For example, import the common contract and Codex adapter in a consumer package, then start a session and submit a prompt:
+After adding the packages described in [Setup](#setup), start a session and submit a prompt:
 
 ```mbt check
 ///|
-import {
-  "totto2727/agent-sdk/cli" @cli,
-  "totto2727/agent-sdk/cli/codex" @codex_adapter,
-}
-
-///|
-async fn run_with_codex(prompt : String) -> @cli.FinalResponse {
-  @codex_adapter.codex_cli().start().prompt(@cli.Prompt::Prompt(prompt))
+pub async fn run_with_codex(prompt : String) -> @cli.FinalResponse {
+  let response = @codex_adapter.codex_cli().start().prompt(
+    @cli.Prompt::Prompt(prompt),
+  )
+  response
 }
 ```
 
@@ -49,7 +46,14 @@ async fn run_with_codex(prompt : String) -> @cli.FinalResponse {
 moon add totto2727/agent-sdk@0.2.0
 ```
 
-2. Import the common package and the provider adapter package needed by your application.
+2. Import the common package and the provider adapter package needed by your application in `moon.pkg`.
+
+```moonbit
+import {
+  "totto2727/agent-sdk/cli" @cli,
+  "totto2727/agent-sdk/cli/codex" @codex_adapter,
+}
+```
 
 See the package-specific usage guides for checked examples and provider-native options.
 
