@@ -6,14 +6,14 @@ This document is canonical `src/cli/codex/README.mbt.md`; common session types a
 
 ## Usage
 
-Create a Codex adapter with Codex-native options, then start its provider-neutral session. Adapter construction does not start a provider process, so this checked example is deterministic:
+Ask Codex to summarize a repository and return the provider-neutral completed response:
 
 ```mbt check
 ///|
-test "create a Codex adapter session" {
-  let cli = codex_cli()
-  let session = cli.start()
-  assert_eq(session.id(), None)
+pub async fn summarize_repository() -> @cli.FinalResponse {
+  codex_cli()
+  .start()
+  .prompt(@cli.Prompt::Prompt("Summarize the repository status"))
 }
 ```
 

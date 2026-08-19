@@ -6,14 +6,14 @@ This document is canonical `src/cli/opencode/README.mbt.md`; common session type
 
 ## Usage
 
-Create an OpenCode adapter with OpenCode-native options, then start its provider-neutral session. Adapter construction does not start a provider process, so this checked example is deterministic:
+Ask OpenCode to summarize a repository and return the provider-neutral completed response:
 
 ```mbt check
 ///|
-test "create an OpenCode adapter session" {
-  let cli = opencode_cli()
-  let session = cli.start()
-  assert_eq(session.id(), None)
+pub async fn summarize_repository() -> @cli.FinalResponse {
+  opencode_cli()
+  .start()
+  .prompt(@cli.Prompt::Prompt("Summarize the repository status"))
 }
 ```
 

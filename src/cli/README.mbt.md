@@ -6,17 +6,16 @@ This document is canonical `src/cli/README.mbt.md`; it documents only the common
 
 ## Usage
 
-Construct a prompt and pass it to the provider-neutral session flow. This checked example uses the public prompt contract without starting a provider process:
+Run a representative repository-summary request through a caller-supplied provider adapter and return its completed response:
 
 ```mbt check
 ///|
-test "construct a prompt for a provider session" {
-  let prompt = Prompt::Prompt("Summarize the repository", context_files=[])
-  assert_eq(prompt.text, "Summarize the repository")
+pub async fn summarize_repository(cli : Cli) -> FinalResponse {
+  cli.start().prompt(Prompt::Prompt("Summarize the repository status"))
 }
 ```
 
-Use `Cli::start` for a fresh session and `Cli::continue_session` with the opaque continuation returned by a completed response.
+Use `Cli::continue_session` with the opaque continuation returned by a completed response when the next prompt should resume the same provider session.
 
 ## Key features
 
