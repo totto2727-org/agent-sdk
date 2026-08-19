@@ -2,8 +2,6 @@
 
 Provider-neutral MoonBit interfaces for running Codex and OpenCode CLI sessions while leaving each provider's native options, event models, errors, and continuation behavior in its own SDK.
 
-This document is canonical `README.mbt.md`; maintain `README.md` as the relative symlink `README.md -> README.mbt.md`.
-
 ## Usage
 
 Use the provider-neutral session contract from the common [CLI package](./src/cli/README.mbt.md), then select the [Codex adapter](./src/cli/codex/README.mbt.md) or [OpenCode adapter](./src/cli/opencode/README.mbt.md).
