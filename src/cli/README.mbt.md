@@ -2,59 +2,20 @@
 
 Provider-neutral MoonBit interfaces for prompts, live CLI sessions, opaque continuations, and completed responses.
 
-This document is canonical `src/cli/README.mbt.md`; it documents only the common contract. Provider-native behavior belongs to the [Codex adapter](./codex/README.mbt.md) and [OpenCode adapter](./opencode/README.mbt.md).
+Consumer acquisition, imports, and the common session flow are documented in the root [Setup](../../README.mbt.md#setup) and [Usage](../../README.mbt.md#usage).
 
-## Usage
-
-Run a representative repository-summary request through a caller-supplied provider adapter and return its completed response:
-
-```mbt check
-///|
-pub async fn summarize_repository(cli : Cli) -> FinalResponse {
-  cli.start().prompt(Prompt::Prompt("Summarize the repository status"))
-}
-```
-
-Use `Cli::continue_session` with the opaque continuation returned by a completed response when the next prompt should resume the same provider session.
-
-## Key features
+## Package role
 
 - `Prompt` carries caller-ordered context paths without changing text-only callers.
-
 - `Cli` and `CliSession` provide one flow for starting, prompting, and resuming provider adapters.
-
 - `Continuation` hides provider-owned resume identifiers and behavior from consumers.
-
 - `FinalResponse` exposes final text, optional session metadata, changed paths, and an optional continuation.
-
 - Cancelling the task running `CliSession::prompt` propagates the cancellation error after provider cleanup.
 
-## Prerequisites
+## Runnable example
 
-- **MoonBit**: Install the MoonBit toolchain and `moon` command.
-
-- **agent-sdk module**: Add `totto2727/agent-sdk` to the consuming MoonBit module.
-
-## Setup
-
-1. Add the module to your MoonBit project.
-
-```bash
-moon add totto2727/agent-sdk@0.2.0
-```
-
-2. Import `totto2727/agent-sdk/cli` in the package that owns your session flow.
+See the [checked common session consumer flow](./cli_test.mbt).
 
 ## API
 
-See the [Mooncakes API reference for `totto2727/agent-sdk/cli`](https://mooncakes.io/docs/totto2727/agent-sdk/cli) for the maintained generated API.
-
-## Development
-
-For repository structure and development commands, see [AGENTS.md](../../AGENTS.md).
-
-## License
-
-MIT; see [LICENSE](../../LICENSE).
-
-_This README was generated from the [share-artifact skill](https://raw.githubusercontent.com/totto2727-org/agent/refs/heads/main/plugins/totto2727-coding/skills/share-artifact/SKILL.md) and [README template](https://raw.githubusercontent.com/totto2727-org/agent/refs/heads/main/plugins/totto2727-coding/skills/share-artifact/readme/template.md)._
+[Mooncakes API reference for `totto2727/agent-sdk/cli`](https://mooncakes.io/docs/totto2727/agent-sdk/cli)
