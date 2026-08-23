@@ -99,8 +99,18 @@ fn codex_session(
 }
 
 ///|
-/// Creates the provider-neutral CLI adapter while retaining Codex-native
-/// client, thread, and turn options at this package boundary.
+/// Creates a Codex-backed provider-neutral CLI adapter.
+///
+/// Codex-native client, thread, and turn options remain available at this
+/// package boundary. Prompt context paths are appended to the prompt text in
+/// caller order, and completed Codex patch paths are returned in
+/// `FinalResponse.changed_files`.
+///
+/// ```check
+/// let cli = codex_cli()
+/// let session = cli.start()
+/// assert_eq(session.id(), None)
+/// ```
 pub fn codex_cli(
   options? : @sdk.ClientOptions = @sdk.ClientOptions::ClientOptions(),
   thread_options? : @sdk.ThreadOptions = @sdk.ThreadOptions::ThreadOptions(),

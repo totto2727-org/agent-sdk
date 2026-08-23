@@ -61,8 +61,18 @@ fn opencode_session(
 }
 
 ///|
-/// Creates the provider-neutral CLI adapter while retaining OpenCode-native
-/// client and thread options at this package boundary.
+/// Creates an OpenCode-backed provider-neutral CLI adapter.
+///
+/// OpenCode-native client and thread options remain available at this package
+/// boundary. Prompt context paths are forwarded as ordered local-file inputs;
+/// OpenCode currently returns an empty `FinalResponse.changed_files` collection
+/// because its event model does not expose a reliable change set.
+///
+/// ```check
+/// let cli = opencode_cli()
+/// let session = cli.start()
+/// assert_eq(session.id(), None)
+/// ```
 pub fn opencode_cli(
   options? : @sdk.ClientOptions = @sdk.ClientOptions::ClientOptions(),
   thread_options? : @sdk.ThreadOptions = @sdk.ThreadOptions::ThreadOptions(),
