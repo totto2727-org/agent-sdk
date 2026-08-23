@@ -2,9 +2,9 @@
 moonbit:
   backend: wasm
   import:
-    - path: totto2727/agent-sdk@0.2.0/cli
+    - path: totto2727/agent-sdk@0.2.1/cli
       alias: cli
-    - path: totto2727/agent-sdk@0.2.0/cli/codex
+    - path: totto2727/agent-sdk@0.2.1/cli/codex
       alias: codex_adapter
 ---
 
@@ -51,7 +51,7 @@ pub async fn summarize_repository() -> @cli.FinalResponse {
 1. Add the module to your MoonBit project.
 
 ```bash
-moon add totto2727/agent-sdk@0.2.0
+moon add totto2727/agent-sdk@0.2.1
 ```
 
 2. Import the common package and the provider adapter package needed by your application in `moon.pkg`.
