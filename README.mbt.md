@@ -1,3 +1,13 @@
+---
+moonbit:
+  backend: wasm
+  import:
+    - path: totto2727/agent-sdk@0.2.0/cli
+      alias: cli
+    - path: totto2727/agent-sdk@0.2.0/cli/codex
+      alias: codex_adapter
+---
+
 # totto2727/agent-sdk
 
 Provider-neutral MoonBit interfaces for running Codex and OpenCode CLI sessions while leaving each provider's native options, event models, errors, and continuation behavior in its own SDK.

@@ -40,7 +40,7 @@ The package-specific README files document only the public contract owned by the
 
 - `moon check --target native` — Type-check all module packages for the native target.
 
-- `moon check README.mbt.md` — Validate the root module README.
+- `moon -C /tmp check "$PWD/README.mbt.md"` — Validate the root module README from an external working directory so the command cannot succeed without compiling its checked examples.
 
 - `(cd src/cli && moon check README.mbt.md)` — Validate the common package README.
 
@@ -52,7 +52,7 @@ The package-specific README files document only the public contract owned by the
 
 - `moon test --target native` — Run package tests for the native target.
 
-- The root README is a module overview without executable MoonBit blocks; run the package README commands below for literate examples.
+- The root README has checked provider-neutral Codex usage; its YAML front matter supplies the documentation-only imports without adding a root package or production source files.
 
 - `(cd src/cli && moon test README.mbt.md)` — Execute the common package README examples.
 
