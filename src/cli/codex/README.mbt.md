@@ -11,10 +11,12 @@ Consumer acquisition, imports, and the common session flow are documented in the
 - Completed Codex file changes are exposed as typed `Path` values.
 - Provider errors and task cancellation propagate through the common session contract after process cleanup.
 
-## Runnable example
+## Usage
 
 See the [checked Codex adapter flows](./codex_test.mbt).
 
 ## API
 
 [Mooncakes API reference for `totto2727/agent-sdk/cli/codex`](https://mooncakes.io/docs/totto2727/agent-sdk/cli/codex)
+
+_This README was generated from the [share-artifact skill](https://raw.githubusercontent.com/totto2727-org/agent/refs/heads/main/plugins/totto2727-coding/skills/share-artifact/SKILL.md) and [README template](https://raw.githubusercontent.com/totto2727-org/agent/refs/heads/main/plugins/totto2727-coding/skills/share-artifact/readme/template.md)._
