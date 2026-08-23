@@ -17,13 +17,10 @@ async fn with_fake_codex(run : async (FakeCodex) -> Unit) -> Unit {
   )
   @fs.chmod(executable.to_string(), 0o755)
   let fixture = FakeCodex::{ executable, records }
-  run(fixture) catch {
-    error => {
-      @async.protect_from_cancel(async fn() { @fs.rmdir(root, recursive=true) })
-      raise error
-    }
-  }
-  @fs.rmdir(root, recursive=true)
+  defer @async.protect_from_cancel(async fn() {
+    @fs.rmdir(root, recursive=true)
+  })
+  run(fixture)
 }
 
 ///|
