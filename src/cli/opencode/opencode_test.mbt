@@ -16,7 +16,7 @@ async fn with_fake_opencode(run : async (FakeOpenCode) -> Unit) -> Unit {
     create_mode=CreateOrTruncate,
   )
   @fs.chmod(executable.to_string(), 0o755)
-  let fixture = FakeOpenCode::{ executable, records }
+  let fixture = FakeOpenCode::{ executable, records, }
   defer @async.protect_from_cancel(async fn() {
     @fs.rmdir(root, recursive=true)
   })
@@ -27,8 +27,8 @@ async fn with_fake_opencode(run : async (FakeOpenCode) -> Unit) -> Unit {
 fn FakeOpenCode::options(
   self : FakeOpenCode,
   events : Array[String],
-  pause? : Bool = false,
-  exit_code? : Int = 0,
+  pause~ : Bool = false,
+  exit_code~ : Int32 = 0,
 ) -> @sdk.ClientOptions {
   let env : Map[String, String] = {
     "PATH": "/usr/bin:/bin",
@@ -51,7 +51,7 @@ fn FakeOpenCode::options(
 async fn FakeOpenCode::record(
   self : FakeOpenCode,
   name : String,
-  call : Int,
+  call : Int32,
 ) -> String {
   @fs.read_file("\{self.records}/\{name}.\{call}").text()
 }
@@ -66,7 +66,7 @@ async fn wait_for_opencode_file(path : String) -> Unit {
 }
 
 ///|
-async fn opencode_process_is_running(pid : Int) -> Bool {
+async fn opencode_process_is_running(pid : Int32) -> Bool {
   let (code, _, _) = @process.collect_output("kill", ["-0", pid.to_string()])
   code == 0
 }
@@ -110,7 +110,7 @@ fn fake_opencode_script() -> String {
 ///|
 async test "OpenCode adapter maps prompt, continuation, errors, and cancellation" {
   with_fake_opencode(async fn(fixture) {
-    let cli = opencode_cli(
+    let cli = @opencode.opencode_cli(
       options=fixture.options([
         opencode_events("session-1", "first"),
         opencode_events("session-1", "second"),
@@ -139,7 +139,7 @@ async test "OpenCode adapter maps prompt, continuation, errors, and cancellation
     assert_true(fixture.record("args", 2).contains("--session\nsession-1"))
   })
   with_fake_opencode(async fn(fixture) {
-    let cli = opencode_cli(
+    let cli = @opencode.opencode_cli(
       options=fixture.options([opencode_events("session-existing", "resumed")]),
       resume_thread_id="session-existing",
     )
@@ -152,7 +152,7 @@ async test "OpenCode adapter maps prompt, continuation, errors, and cancellation
     )
   })
   with_fake_opencode(async fn(fixture) {
-    let cli = opencode_cli(options=fixture.options([], exit_code=7))
+    let cli = @opencode.opencode_cli(options=fixture.options([], exit_code=7))
     let code = try {
       cli.start().prompt(@cli.Prompt::Prompt("fail")) |> ignore
       0
@@ -163,7 +163,7 @@ async test "OpenCode adapter maps prompt, continuation, errors, and cancellation
     inspect(code, content="7")
   })
   with_fake_opencode(async fn(fixture) {
-    let cli = opencode_cli(options=fixture.options([], pause=true))
+    let cli = @opencode.opencode_cli(options=fixture.options([], pause=true))
     @async.with_task_group(async fn(group) {
       let task = group.spawn(
         async fn() {
@@ -183,7 +183,8 @@ async test "OpenCode adapter maps prompt, continuation, errors, and cancellation
         task.wait()
         false
       } catch {
-        error => @async.is_cancellation_error(error)
+        @async.WaitedTaskAlreadyCancelled => true
+        error => raise error
       }
       assert_true(cancelled)
       assert_false(opencode_process_is_running(pid))

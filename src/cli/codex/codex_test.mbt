@@ -16,7 +16,7 @@ async fn with_fake_codex(run : async (FakeCodex) -> Unit) -> Unit {
     create_mode=CreateOrTruncate,
   )
   @fs.chmod(executable.to_string(), 0o755)
-  let fixture = FakeCodex::{ executable, records }
+  let fixture = FakeCodex::{ executable, records, }
   defer @async.protect_from_cancel(async fn() {
     @fs.rmdir(root, recursive=true)
   })
@@ -27,8 +27,8 @@ async fn with_fake_codex(run : async (FakeCodex) -> Unit) -> Unit {
 fn FakeCodex::options(
   self : FakeCodex,
   events : Array[String],
-  pause? : Bool = false,
-  exit_code? : Int = 0,
+  pause~ : Bool = false,
+  exit_code~ : Int32 = 0,
 ) -> @sdk.ClientOptions {
   let env : Map[String, String] = {
     "PATH": "/usr/bin:/bin",
@@ -51,7 +51,7 @@ fn FakeCodex::options(
 async fn FakeCodex::record(
   self : FakeCodex,
   name : String,
-  call : Int,
+  call : Int32,
 ) -> String {
   @fs.read_file("\{self.records}/\{name}.\{call}").text()
 }
@@ -66,7 +66,7 @@ async fn wait_for_codex_file(path : String) -> Unit {
 }
 
 ///|
-async fn codex_process_is_running(pid : Int) -> Bool {
+async fn codex_process_is_running(pid : Int32) -> Bool {
   let (code, _, _) = @process.collect_output("kill", ["-0", pid.to_string()])
   code == 0
 }
@@ -119,7 +119,7 @@ fn fake_codex_script() -> String {
 ///|
 async test "Codex adapter maps prompt, continuation, errors, and cancellation" {
   with_fake_codex(async fn(fixture) {
-    let cli = codex_cli(
+    let cli = @codex.codex_cli(
       options=fixture.options([
         codex_events("thread-1", "first", changed_path="src/changed.mbt"),
         codex_events("thread-1", "second"),
@@ -151,7 +151,7 @@ async test "Codex adapter maps prompt, continuation, errors, and cancellation" {
     assert_true(fixture.record("args", 2).contains("resume\nthread-1"))
   })
   with_fake_codex(async fn(fixture) {
-    let cli = codex_cli(
+    let cli = @codex.codex_cli(
       options=fixture.options([codex_events("thread-existing", "resumed")]),
       resume_thread_id="thread-existing",
     )
@@ -162,7 +162,7 @@ async test "Codex adapter maps prompt, continuation, errors, and cancellation" {
     assert_true(fixture.record("args", 1).contains("resume\nthread-existing"))
   })
   with_fake_codex(async fn(fixture) {
-    let cli = codex_cli(options=fixture.options([], exit_code=7))
+    let cli = @codex.codex_cli(options=fixture.options([], exit_code=7))
     let code = try {
       cli.start().prompt(@cli.Prompt::Prompt("fail")) |> ignore
       0
@@ -173,7 +173,7 @@ async test "Codex adapter maps prompt, continuation, errors, and cancellation" {
     inspect(code, content="7")
   })
   with_fake_codex(async fn(fixture) {
-    let cli = codex_cli(options=fixture.options([], pause=true))
+    let cli = @codex.codex_cli(options=fixture.options([], pause=true))
     @async.with_task_group(async fn(group) {
       let task = group.spawn(
         async fn() {
@@ -193,7 +193,8 @@ async test "Codex adapter maps prompt, continuation, errors, and cancellation" {
         task.wait()
         false
       } catch {
-        error => @async.is_cancellation_error(error)
+        @async.WaitedTaskAlreadyCancelled => true
+        error => raise error
       }
       assert_true(cancelled)
       assert_false(codex_process_is_running(pid))

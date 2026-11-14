@@ -1,6 +1,7 @@
 supported_targets = "+wasm+native"
 
 import {
+  "moonbitlang/core/debug",
   "moonbitlang/x/path",
 }
 
