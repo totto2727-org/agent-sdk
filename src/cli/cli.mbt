@@ -5,10 +5,17 @@
 /// the paths to the prompt text, while OpenCode adapters forward them as
 /// ordered local-file inputs. Callers should resolve relative paths against
 /// their workspace before constructing a prompt.
+#derive(Debug, Eq)
 pub struct Prompt {
   text : String
   context_files : ReadOnlyArray[@path.Path]
-} derive(Debug, Eq)
+}
+
+///|
+pub extend Prompt with @debug.Debug::{to_repr}
+
+///|
+pub extend Prompt with Eq::{not_equal, equal}
 
 ///|
 /// Creates a provider-neutral prompt without changing text-only callers.
@@ -22,9 +29,9 @@ pub struct Prompt {
 /// ```
 pub fn Prompt::Prompt(
   text : String,
-  context_files? : ReadOnlyArray[@path.Path] = [],
+  context_files~ : ReadOnlyArray[@path.Path] = [],
 ) -> Prompt {
-  { text, context_files }
+  { text, context_files, }
 }
 
 ///|
@@ -72,10 +79,10 @@ pub struct FinalResponse {
 pub fn FinalResponse::FinalResponse(
   text : String,
   session_id? : String,
-  changed_files? : ReadOnlyArray[@path.Path] = [],
+  changed_files~ : ReadOnlyArray[@path.Path] = [],
   continuation? : Continuation,
 ) -> FinalResponse {
-  { text, session_id, changed_files, continuation }
+  { text, session_id, changed_files, continuation, }
 }
 
 ///|
@@ -111,7 +118,7 @@ pub struct Cli {
 /// The factory is called when `start` is invoked, so provider-native options
 /// remain owned by the selected adapter.
 pub fn Cli::Cli(start : () -> &CliSession) -> Cli {
-  { start_session: start }
+  { start_session: start, }
 }
 
 ///|
