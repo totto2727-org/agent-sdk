@@ -175,7 +175,7 @@ async test "OpenCode adapter maps prompt, continuation, errors, and cancellation
       wait_for_opencode_file(pid_path)
       let pid = @string.parse_int(
         @fs.read_file(pid_path).text().trim(),
-        base=10,
+        radix=10,
       )
       assert_true(opencode_process_is_running(pid))
       task.cancel()

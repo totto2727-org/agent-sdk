@@ -185,7 +185,7 @@ async test "Codex adapter maps prompt, continuation, errors, and cancellation" {
       wait_for_codex_file(pid_path)
       let pid = @string.parse_int(
         @fs.read_file(pid_path).text().trim(),
-        base=10,
+        radix=10,
       )
       assert_true(codex_process_is_running(pid))
       task.cancel()
