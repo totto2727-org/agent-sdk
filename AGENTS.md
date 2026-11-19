@@ -96,7 +96,7 @@ The package-specific README files document only the public contract owned by the
 
 - **MoonBit**: Language compiler, package manager, documentation generator, and test runner.
 
-- **Nix and direnv**: Reproducible default toolchain environment; the CI shell adds provider CLI executables for process tests.
+- **Nix and direnv**: The default shell provides MoonBit for local development. The `ci` shell provides only the provider CLIs. Shared actions install stable MoonBit for checks and publishing.
 
 - **Mooncakes**: Canonical generated API documentation and registry for `totto2727/agent-sdk`.
 

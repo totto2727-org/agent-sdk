@@ -48,7 +48,7 @@
         let
           pkgs = mkPkgs system;
         in
-        rec {
+        {
           default = pkgs.mkShell {
             packages = [
               pkgs.moonbit-bin.latest
@@ -59,7 +59,6 @@
             '';
           };
           ci = pkgs.mkShell {
-            inputsFrom = [ (default.overrideAttrs (_: { shellHook = ""; })) ];
             packages = [
               pkgs.codex
               pkgs.opencode
