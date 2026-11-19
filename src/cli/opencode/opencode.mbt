@@ -56,7 +56,7 @@ fn opencode_session(
     Some(id) => client.resume_thread(id, options=thread_options)
     None => client.start_thread(options=thread_options)
   }
-  let session = OpenCodeCliSession::{ client, thread, thread_options }
+  let session = OpenCodeCliSession::{ client, thread, thread_options, }
   (session : &@cli.CliSession)
 }
 
@@ -74,8 +74,8 @@ fn opencode_session(
 /// assert_eq(session.id(), None)
 /// ```
 pub fn opencode_cli(
-  options? : @sdk.ClientOptions = @sdk.ClientOptions::ClientOptions(),
-  thread_options? : @sdk.ThreadOptions = @sdk.ThreadOptions::ThreadOptions(),
+  options~ : @sdk.ClientOptions = @sdk.ClientOptions::ClientOptions(),
+  thread_options~ : @sdk.ThreadOptions = @sdk.ThreadOptions::ThreadOptions(),
   resume_thread_id? : String,
 ) -> @cli.Cli {
   let client = @sdk.Client::Client(options~)

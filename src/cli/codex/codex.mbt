@@ -112,9 +112,9 @@ fn codex_session(
 /// assert_eq(session.id(), None)
 /// ```
 pub fn codex_cli(
-  options? : @sdk.ClientOptions = @sdk.ClientOptions::ClientOptions(),
-  thread_options? : @sdk.ThreadOptions = @sdk.ThreadOptions::ThreadOptions(),
-  turn_options? : @sdk.TurnOptions = @sdk.TurnOptions::TurnOptions(),
+  options~ : @sdk.ClientOptions = @sdk.ClientOptions::ClientOptions(),
+  thread_options~ : @sdk.ThreadOptions = @sdk.ThreadOptions::ThreadOptions(),
+  turn_options~ : @sdk.TurnOptions = @sdk.TurnOptions::TurnOptions(),
   resume_thread_id? : String,
 ) -> @cli.Cli {
   let client = @sdk.Client::Client(options~)
